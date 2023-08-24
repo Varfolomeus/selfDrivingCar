@@ -6,8 +6,8 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import javax.swing.*;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+// import java.util.concurrent.ExecutorService;
+// import java.util.concurrent.Executors;
 
 public class gameSelfDrivingCar extends JFrame {
 
@@ -70,8 +70,8 @@ public class gameSelfDrivingCar extends JFrame {
 	public boolean gamereloading;
 
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
-		// new gameSelfDrivingCar().go();
+		// SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
+		new gameSelfDrivingCar().go();
 	}
 
 	void go() {
@@ -163,10 +163,10 @@ public class gameSelfDrivingCar extends JFrame {
 		traffic = generateTraffic(trafficCascades);
 		container.requestFocus();
 
-		int numberOfCores = Runtime.getRuntime().availableProcessors();
-		ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
+		// int numberOfCores = Runtime.getRuntime().availableProcessors();
+		// ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
 
-		executorService.submit(() -> {
+		// executorService.submit(() -> {
 			while (!isGameOver) {
 				for (Car carobj : cars) {
 					if (!carobj.damaged || carobj.hunamDrives) {
@@ -208,7 +208,7 @@ public class gameSelfDrivingCar extends JFrame {
 				} catch (InterruptedException e1) {
 				}
 			}
-		});
+		// });
 	}
 
 	private void optionsRadioButtonsSetup(gameSelfDrivingCar gameClass) {
