@@ -3,6 +3,7 @@ package selfDrivingCar;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Sensor {
 	public double rayLength;
@@ -45,7 +46,7 @@ public class Sensor {
 		}
 	}
 
-	public void getReading(Car car, Road road, ArrayList<Car> traffic) {
+	public void getReading(Car car, Road road, CopyOnWriteArrayList<Car> traffic) {
 		for (int k = 0; k < car.sensor.rays.size(); ++k) {
 			ArrayList<Intersections> touches = new ArrayList<Intersections>();
 			for (int i = 0; i < road.roadMiddleLaneCoordsList.get(0).size() -

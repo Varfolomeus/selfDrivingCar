@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import javax.swing.*;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -38,7 +39,7 @@ public class gameSelfDrivingCar extends JFrame {
 	public double RAYS_SPREAD_ANGLE_timser = 1.75;
 	public double RAYS_SPREAD_ANGLE;
 	public int CarsNumber = 10;
-	public int userKeyEvent = 0;
+	public volatile int userKeyEvent = 0;
 	public long startTime;
 	final int CAR_DECISIONS_COUNT = 4;
 	final String SAVE_FILE_EXT = ".brain";
@@ -55,8 +56,8 @@ public class gameSelfDrivingCar extends JFrame {
 	public int carHeight;
 	public Boolean isGameOver = false;
 	public Color carStartColor = new Color(200, 100, 30);
-	public ArrayList<Car> cars;
-	public ArrayList<Car> traffic;
+	public CopyOnWriteArrayList<Car> cars;
+	public CopyOnWriteArrayList<Car> traffic;
 	public Car bestCar;
 	public Car userCar;
 	public SaveGame savedGame;
@@ -68,9 +69,13 @@ public class gameSelfDrivingCar extends JFrame {
 	public NetworkCanvas networkCanvas;
 	public Road road;
 	public boolean gamereloading;
+	private long currentTime;
+	private long savedTime;
+	private long currentFrameTime;
+	private long savedFrameTime;
+	private long frameTime;
 
 	public static void main(String[] args) {
-		// SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
 		new gameSelfDrivingCar().go();
 	}
 
@@ -109,8 +114,8 @@ public class gameSelfDrivingCar extends JFrame {
 		carHeight = (int) Math.floor((double) 50 / 30 * carWidth);
 		gameFrame.setBounds(START_LOCATIONX, START_LOCATIONY, WINDOW_WIDTH, WINDOW_HEIGHT + 52);
 		container.setLayout(null);
-		cars = new ArrayList<Car>();
-		traffic = new ArrayList<Car>();
+		cars = new CopyOnWriteArrayList<Car>();
+		traffic = new CopyOnWriteArrayList<Car>();
 		random = new Random();
 		optionsRadioButtonsSetup(this);
 		comboboxSetup(this);
@@ -140,6 +145,8 @@ public class gameSelfDrivingCar extends JFrame {
 		container.add(viewImageGamePannel);
 		gameFrame.setResizable(true);
 		gameFrame.setVisible(true);
+		savedTime = System.currentTimeMillis();
+		savedFrameTime = savedTime;
 		if (savedGame != null) {
 			Car testCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
 					Math.PI * RAYS_SPREAD_ANGLE_timser, CAR_DECISIONS_COUNT, NNLayersInput, "AI", botMaxSpeed,
@@ -177,8 +184,11 @@ public class gameSelfDrivingCar extends JFrame {
 				}));
 
 			}
-			if (userKeyEvent != 0) {
+			currentTime = System.currentTimeMillis();
+
+			if (userKeyEvent != 0 && currentTime - savedTime > 500L) {
 				userKeyEvent = 0;
+				savedTime = currentTime;
 			}
 			for (Car traphObj : traffic) {
 				traffFutures.add(executorService.submit((Runnable) () -> {
@@ -227,11 +237,17 @@ public class gameSelfDrivingCar extends JFrame {
 				restartGame(this);
 				gamereloading = !gamereloading;
 			}
+			currentFrameTime = System.currentTimeMillis();
+			frameTime = currentFrameTime-savedFrameTime;
+		;
 			try {
-				Thread.sleep(sleeptime);
+				Thread.sleep(((currentFrameTime - savedFrameTime) > sleeptime ? (sleeptime>20? sleeptime:20):20));
 			} catch (InterruptedException e1) {
-			}
+			}			
+			savedFrameTime = currentFrameTime;
+
 		}
+		executorService.shutdown();
 	}
 
 	private void optionsRadioButtonsSetup(gameSelfDrivingCar gameClass) {
@@ -401,12 +417,10 @@ public class gameSelfDrivingCar extends JFrame {
 					noOption.setSelected(!chainedmutations);
 				}
 				;
-				userKeyEvent = 0;
 				break;
 			case 76:
 				// l - 76 - load best car brain +
 				getSavedGame();
-				userKeyEvent = 0;
 				break;
 			case 77:
 				// m - 77 - mutations enablet or not +
@@ -416,17 +430,14 @@ public class gameSelfDrivingCar extends JFrame {
 					noOption.setSelected(!mutations);
 				}
 				;
-				userKeyEvent = 0;
 				break;
 			case 78:
 				// n - 78 - new game +
 				gamereloading = true;
-				userKeyEvent = 0;
 				break;
 			case 83:
 				// s - 83 - save best car brain +
 				saveGame();
-				userKeyEvent = 0;
 				break;
 			case 85:
 				// u - 85 - use saved brain in new car generation --
@@ -436,21 +447,20 @@ public class gameSelfDrivingCar extends JFrame {
 					noOption.setSelected(!useSavedBrain);
 				}
 				;
-				userKeyEvent = 0;
 				break;
 		}
 
 	}
 
-	private void filterDamaged(ArrayList<Car> cars2) {
+	private void filterDamaged(CopyOnWriteArrayList<Car> cars2) {
 		cars2.removeIf(carobj -> carobj.damaged && !carobj.bestCar && !carobj.humanDrives);
 	}
 
-	public ArrayList<Car> generateCars(int CarsNumber, boolean mutations) {
+	public CopyOnWriteArrayList<Car> generateCars(int CarsNumber, boolean mutations) {
 		if (CarsNumber == 0)
 			CarsNumber = 1;
 		RAYS_SPREAD_ANGLE = Math.PI * RAYS_SPREAD_ANGLE_timser;
-		ArrayList<Car> carListToBeCreated = new ArrayList<Car>();
+		CopyOnWriteArrayList<Car> carListToBeCreated = new CopyOnWriteArrayList<Car>();
 
 		for (int i = 0; i < CarsNumber; ++i) {
 
@@ -493,11 +503,11 @@ public class gameSelfDrivingCar extends JFrame {
 		return carListToBeCreated;
 	}
 
-	public ArrayList<Car> generateTraffic(int cascades) {
+	public CopyOnWriteArrayList<Car> generateTraffic(int cascades) {
 		int carY = 0;
 		int roadLineWidth = (int) road.laneWidth;
 		int startBotX = (CAR_CANVAS_WIDTH - road.roadWidth + roadLineWidth) / 2;
-		ArrayList<Car> traffic1 = new ArrayList<Car>();
+		CopyOnWriteArrayList<Car> traffic1 = new CopyOnWriteArrayList<Car>();
 
 		for (int i = 0; i <= cascades; i++) {
 			if (i == 0)

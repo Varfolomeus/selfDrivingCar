@@ -22,6 +22,7 @@ public class Controls {
 		switch (controlType) {
 			case "KEYS":
 				carReflection(keyevent);
+				System.out.println(keyevent);
 				break;
 			// case "AI":
 			// carReflection (gameclass);
@@ -39,28 +40,21 @@ public class Controls {
 			// arrows - left, right, forward move , reverse move
 			case 37:
 				left = true;
-				userKeyEvent = 0;
 				break;
 			case 39:
 				right = true;
-				userKeyEvent = 0;
 				break;
 			case 38:
 				forward = true;
-				userKeyEvent = 0;
 				break;
 			case 40:
 				reverse = true;
-				userKeyEvent = 0;
 				break;
 			case 0:
 				left = false;
 				right = false;
 				forward = false;
 				reverse = false;
-				break;
-			default:
-				userKeyEvent = 0;
 				break;
 		}
 	}

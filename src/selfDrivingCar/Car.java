@@ -2,6 +2,7 @@ package selfDrivingCar;
 
 import java.awt.*;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Car {
 	public int x;
@@ -116,7 +117,7 @@ public class Car {
 		yDotsPolygonCoords[3] = (int) Math.round(y - Math.cos(-angle + alpha) * rad);
 	}
 
-	public void carMove(int keyevent, Road road, ArrayList<Car> traffic, Car bestCar) {
+	public void carMove(int keyevent, Road road, CopyOnWriteArrayList<Car> traffic, Car bestCar) {
 		currentColor = (!damaged) ? normalColor : damagedColor;
 		move(keyevent);
 		if (useBrain || humanDrives) {
@@ -234,7 +235,7 @@ public class Car {
 		}
 	}
 
-	private boolean accessDamage(ArrayList<ArrayList<Double>> roadBorders, ArrayList<Car> traffic) {
+	private boolean accessDamage(ArrayList<ArrayList<Double>> roadBorders, CopyOnWriteArrayList<Car> traffic) {
 
 		for (int paintLineX = 0; paintLineX < roadBorders.get(0).size(); paintLineX += 2) {
 			if (Utils.polysIntersect(this, roadBorders, paintLineX,
