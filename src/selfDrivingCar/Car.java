@@ -31,7 +31,7 @@ public class Car {
 	private double[] offsets;
 	public boolean damaged;
 	public boolean useBrain;
-	public boolean hunamDrives;
+	public boolean humanDrives;
 	private int raysCount;
 	private double raysSpreadAngle;
 	public int[] xDotsPolygonCoords;
@@ -68,13 +68,13 @@ public class Car {
 		this.yDotsPolygonCoords = new int[4];
 		this.xDotsCachedPolygonCoords = new int[4];
 		this.yDotsCachedPolygonCoords = new int[4];
-		createPolygon();
+		this.createPolygon();
 		this.speed = 0;
 		this.maxSpeed = maxSpeed;
 		this.toBestCarMaxDistance = this.height * 10;
 		this.damaged = false;
 		this.useBrain = controlType.equalsIgnoreCase("AI");
-		this.hunamDrives = controlType.equalsIgnoreCase("KEYS");
+		this.humanDrives = controlType.equalsIgnoreCase("KEYS");
 
 		ArrayList<Integer> NNLayers = new ArrayList<Integer>();
 		if (!NNLayersInput.equals("")) {
@@ -95,7 +95,7 @@ public class Car {
 			this.sensor = new Sensor(this.x, this.y, this.raysCount, this.angle, this.raysSpreadAngle, this.height);
 			this.brain = new NNetwork(layersNNetwork, gameclass.FLOP);
 		}
-		this.controls = new Controls(controlType, gameclass);
+		this.controls = new Controls(controlType);
 		this.carImage = imageProcessor.getImage(this.currentColor, gameclass.random).getScaledInstance((int) carWidth,
 				(int) carHeight, Image.SCALE_DEFAULT);
 		this.bestCarImage = imageProcessor.getImage(Color.GREEN, gameclass.random).getScaledInstance((int) carWidth,
@@ -103,94 +103,91 @@ public class Car {
 	}
 
 	protected void createPolygon() {
-		double rad = Math.hypot(this.width, this.height) / 2;
-		double alpha = Math.atan2(this.height, this.width);
+		double rad = Math.hypot(width, height) / 2;
+		double alpha = Math.atan2(height, width);
 
-		this.xDotsPolygonCoords[0] = (int) Math.round(this.x - Math.sin(Math.PI - this.angle - alpha) * rad);
-		this.yDotsPolygonCoords[0] = (int) Math.round(this.y - Math.cos(Math.PI - this.angle - alpha) * rad);
-		this.xDotsPolygonCoords[1] = (int) Math.round(this.x - Math.sin(Math.PI - this.angle + alpha) * rad);
-		this.yDotsPolygonCoords[1] = (int) Math.round(this.y - Math.cos(Math.PI - this.angle + alpha) * rad);
-		this.xDotsPolygonCoords[2] = (int) Math.round(this.x - Math.sin(-this.angle - alpha) * rad);
-		this.yDotsPolygonCoords[2] = (int) Math.round(this.y - Math.cos(-this.angle - alpha) * rad);
-		this.xDotsPolygonCoords[3] = (int) Math.round(this.x - Math.sin(-this.angle + alpha) * rad);
-		this.yDotsPolygonCoords[3] = (int) Math.round(this.y - Math.cos(-this.angle + alpha) * rad);
+		xDotsPolygonCoords[0] = (int) Math.round(x - Math.sin(Math.PI - angle - alpha) * rad);
+		yDotsPolygonCoords[0] = (int) Math.round(y - Math.cos(Math.PI - angle - alpha) * rad);
+		xDotsPolygonCoords[1] = (int) Math.round(x - Math.sin(Math.PI - angle + alpha) * rad);
+		yDotsPolygonCoords[1] = (int) Math.round(y - Math.cos(Math.PI - angle + alpha) * rad);
+		xDotsPolygonCoords[2] = (int) Math.round(x - Math.sin(-angle - alpha) * rad);
+		yDotsPolygonCoords[2] = (int) Math.round(y - Math.cos(-angle - alpha) * rad);
+		xDotsPolygonCoords[3] = (int) Math.round(x - Math.sin(-angle + alpha) * rad);
+		yDotsPolygonCoords[3] = (int) Math.round(y - Math.cos(-angle + alpha) * rad);
 	}
 
-	public void carMove(gameSelfDrivingCar gameClass) {
-		this.currentColor = (!this.damaged) ? this.normalColor : this.damagedColor;
-		move(gameClass);
-		if (this.useBrain || this.hunamDrives) {
-			this.getroadArea(gameClass.road.roadMiddleLaneCoordsList, this);
-			this.damaged = accessDamage(gameClass.road.roadMiddleLaneCoordsList, gameClass.traffic, gameClass)
-					|| isTotallyFreezed(this, isFreezed(this)) || isOutsider(gameClass, this);
-			if (this.damaged && this.hunamDrives) {
-			this.damaged = false;
-			}
+	public void carMove(int keyevent, Road road, ArrayList<Car> traffic, Car bestCar) {
+		currentColor = (!damaged) ? normalColor : damagedColor;
+		move(keyevent);
+		if (useBrain || humanDrives) {
+			getroadArea(road.roadMiddleLaneCoordsList);
+			damaged = accessDamage(road.roadMiddleLaneCoordsList, traffic)
+					|| isTotallyFreezed(isFreezed()) || isOutsider(bestCar);
 		}
-		if (this.sensor != null) {
-			this.sensor.castCarRays(this.x, this.y, this.angle);
-			this.sensor.getReading(this, gameClass);
-			offsets = new double[this.layersNNetwork[0]];
+		if (sensor != null) {
+			sensor.castCarRays(x, y, angle);
+			sensor.getReading(this, road, traffic);
+			offsets = new double[layersNNetwork[0]];
 			for (int i = 0; i < offsets.length - 1; ++i) {
-				if (this.sensor.rays.get(i).intersectionPoint == null) {
+				if (sensor.rays.get(i).intersectionPoint == null) {
 					offsets[i] = 0;
 				} else {
-					offsets[i] = 1 - this.sensor.rays.get(i).intersectionPoint.getOffset();
+					offsets[i] = 1 - sensor.rays.get(i).intersectionPoint.getOffset();
 				}
 			}
-			offsets[offsets.length - 1] = this.speed / this.maxSpeed;
-			int[] outputs = new int[this.brain.NNlevels[this.brain.NNlevels.length - 1].levelOutputs.length];
-			outputs = this.brain.feedForward(offsets, this.brain);
-			if (this.useBrain) {
-				if (this.useBrain) {
-					this.controls.forward = (outputs[0] == 0) ? false : true;
-					this.controls.left = (outputs[1] == 0) ? false : true;
-					this.controls.right = (outputs[2] == 0) ? false : true;
-					this.controls.reverse = (outputs[3] == 0) ? false : true;
+			offsets[offsets.length - 1] = speed / maxSpeed;
+			int[] outputs = new int[brain.NNlevels[brain.NNlevels.length - 1].levelOutputs.length];
+			outputs = brain.feedForward(offsets, brain);
+			if (useBrain) {
+				if (useBrain) {
+					controls.forward = (outputs[0] == 0) ? false : true;
+					controls.left = (outputs[1] == 0) ? false : true;
+					controls.right = (outputs[2] == 0) ? false : true;
+					controls.reverse = (outputs[3] == 0) ? false : true;
 				}
 			}
 		}
 	}
 
-	private boolean isOutsider(gameSelfDrivingCar gameClass, Car car) {
-		if (gameClass.bestCar != null) {
-			return !car.bestCar && car.y - gameClass.bestCar.y > car.toBestCarMaxDistance;
+	private boolean isOutsider(Car bestCar) {
+		if (bestCar != null) {
+			return !this.bestCar && y - bestCar.y > toBestCarMaxDistance;
 		} else {
 			return false;
 		}
 	}
 
-	private boolean isTotallyFreezed(Car car, boolean freezed) {
+	private boolean isTotallyFreezed(boolean freezed) {
 		if (freezed) {
-			car.freezedFrames++;
+			freezedFrames++;
 		} else {
-			car.freezedFrames = 0;
+			freezedFrames = 0;
 		}
 		;
-		if (car.freezedFrames >= car.freezedFramesMaxCount) {
+		if (freezedFrames >= freezedFramesMaxCount) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	private boolean isFreezed(Car car) {
+	private boolean isFreezed() {
 
-		if (car.x == car.x1 && car.y == car.y1) {
+		if (x == x1 && y == y1) {
 			return true;
 		}
-		car.x1 = car.x;
-		car.y1 = car.y;
+		x1 = x;
+		y1 = y;
 		return false;
 	}
 
-	private void getroadArea(ArrayList<ArrayList<Double>> roadMiddleLaneCoordsList, Car car) {
-		double yInListMin = car.y + car.sensor.rayLength + car.height;
-		double yInListMax = car.y - car.sensor.rayLength - car.height;
-		car.roadListYIndexAreaMax = roadMiddleLaneCoordsList.size() - 1;
-		car.roadListYIndexAreaMin = 0;
-		int currentIndexmaxY = car.roadListYIndexAreaMax;
-		int currentIndexminY = car.roadListYIndexAreaMin; // Indexes of List to use in intersections searches
+	private void getroadArea(ArrayList<ArrayList<Double>> roadMiddleLaneCoordsList) {
+		double yInListMin = y + sensor.rayLength + height;
+		double yInListMax = y - sensor.rayLength - height;
+		roadListYIndexAreaMax = roadMiddleLaneCoordsList.size() - 1;
+		roadListYIndexAreaMin = 0;
+		int currentIndexmaxY = roadListYIndexAreaMax;
+		int currentIndexminY = roadListYIndexAreaMin; // Indexes of List to use in intersections searches
 		int currentIndexmiddleY = 0;
 		double target = 0;
 
@@ -198,11 +195,11 @@ public class Car {
 			int storedIndex = 0;
 			if (i == 0) {
 				target = yInListMin;
-				currentIndexminY = car.roadListYIndexAreaMin;
+				currentIndexminY = roadListYIndexAreaMin;
 			} else {
 				target = yInListMax;
 				storedIndex = 0;
-				currentIndexmaxY = car.roadListYIndexAreaMax;
+				currentIndexmaxY = roadListYIndexAreaMax;
 			}
 			while (currentIndexmaxY != currentIndexminY) {
 				currentIndexmiddleY = (currentIndexmaxY + currentIndexminY) / 2;
@@ -223,33 +220,32 @@ public class Car {
 				storedIndex = currentIndexmiddleY;
 			}
 			if (i == 0) {
-				car.roadListYIndexAreaMin = currentIndexmiddleY;
+				roadListYIndexAreaMin = currentIndexmiddleY;
 			} else {
-				car.roadListYIndexAreaMax = currentIndexmiddleY;
+				roadListYIndexAreaMax = currentIndexmiddleY;
 			}
-			if (car.roadListYIndexAreaMax == 0 && car.roadListYIndexAreaMin == 0) {
-				car.roadListYIndexAreaMax += 1;
+			if (roadListYIndexAreaMax == 0 && roadListYIndexAreaMin == 0) {
+				roadListYIndexAreaMax += 1;
 			}
-			if (car.roadListYIndexAreaMax == roadMiddleLaneCoordsList.size() - 2
-					&& car.roadListYIndexAreaMin == roadMiddleLaneCoordsList.size() - 2) {
-				car.roadListYIndexAreaMax += 1;
+			if (roadListYIndexAreaMax == roadMiddleLaneCoordsList.size() - 2
+					&& roadListYIndexAreaMin == roadMiddleLaneCoordsList.size() - 2) {
+				roadListYIndexAreaMax += 1;
 			}
 		}
 	}
 
-	private boolean accessDamage(ArrayList<ArrayList<Double>> roadBorders, ArrayList<Car> traffic,
-			gameSelfDrivingCar gameclass) {
+	private boolean accessDamage(ArrayList<ArrayList<Double>> roadBorders, ArrayList<Car> traffic) {
 
 		for (int paintLineX = 0; paintLineX < roadBorders.get(0).size(); paintLineX += 2) {
 			if (Utils.polysIntersect(this, roadBorders, paintLineX,
-					null, gameclass)) {
+					null)) {
 				return true;
 			}
 		}
 		if (traffic.size() > 0) {
 			for (Car traffBot : traffic) {
 				if (Utils.polysIntersect(this, null, 0,
-						traffBot, gameclass)) {
+						traffBot)) {
 					return true;
 				}
 			}
@@ -257,58 +253,58 @@ public class Car {
 		return false;
 	}
 
-	private void move(gameSelfDrivingCar gameclass) {
-		this.controls.addKeyboardListeners(gameclass);
-		if (this.controls.forward) {
-			this.speed += acceleration;
-		} else if (this.controls.reverse) {
-			this.speed -= acceleration;
+	private void move(int keyevent) {
+		controls.addKeyboardListeners(keyevent);
+		if (controls.forward) {
+			speed += acceleration;
+		} else if (controls.reverse) {
+			speed -= acceleration;
 		}
 
-		if (this.speed != 0) {
-			int flip = (this.speed > 0) ? -1 : 1;
-			this.angle -= this.angleSpeed * flip;
-			if (this.controls.left) {
-				this.angleSpeed -= this.angleAcceleration;
-			} else if (this.controls.right) {
-				this.angleSpeed += this.angleAcceleration;
+		if (speed != 0) {
+			int flip = (speed > 0) ? -1 : 1;
+			angle -= angleSpeed * flip;
+			if (controls.left) {
+				angleSpeed -= angleAcceleration;
+			} else if (controls.right) {
+				angleSpeed += angleAcceleration;
 			}
 		}
-		if (this.speed > this.maxSpeed) {
-			this.speed = this.maxSpeed;
+		if (speed > maxSpeed) {
+			speed = maxSpeed;
 		}
-		if (this.speed < -this.maxSpeed / 2) {
-			this.speed = -this.maxSpeed / 2;
+		if (speed < -maxSpeed / 2) {
+			speed = -maxSpeed / 2;
 		}
-		if (this.speed > 0) {
-			this.speed -= this.friction;
+		if (speed > 0) {
+			speed -= friction;
 		}
-		if (this.speed < 0) {
-			this.speed += this.friction;
+		if (speed < 0) {
+			speed += friction;
 		}
-		if (Math.abs(this.speed) < this.friction) {
-			this.speed = 0;
-		}
-		;
-		if (this.angleSpeed > angleMaxSpeed) {
-			this.angleSpeed = angleMaxSpeed;
-		} else if (this.angleSpeed < -angleMaxSpeed) {
-			this.angleSpeed = -angleMaxSpeed;
+		if (Math.abs(speed) < friction) {
+			speed = 0;
 		}
 		;
-		if (this.angleSpeed > 0) {
-			this.angleSpeed -= angleAcceleration / 3;
-		} else if (this.angleSpeed < 0) {
-			this.angleSpeed += angleAcceleration / 3;
+		if (angleSpeed > angleMaxSpeed) {
+			angleSpeed = angleMaxSpeed;
+		} else if (angleSpeed < -angleMaxSpeed) {
+			angleSpeed = -angleMaxSpeed;
+		}
+		;
+		if (angleSpeed > 0) {
+			angleSpeed -= angleAcceleration / 3;
+		} else if (angleSpeed < 0) {
+			angleSpeed += angleAcceleration / 3;
 		}
 
-		if (Math.abs(this.angleSpeed) < angleAcceleration / 2) {
-			this.angleSpeed = 0;
+		if (Math.abs(angleSpeed) < angleAcceleration / 2) {
+			angleSpeed = 0;
 		}
 		;
 
-		this.x += (int) Math.round(this.speed * Math.cos(this.angle));
-		this.y += (int) Math.round(this.speed * Math.sin(this.angle));
+		x += (int) Math.round(speed * Math.cos(angle));
+		y += (int) Math.round(speed * Math.sin(angle));
 
 		;
 		createPolygon();
@@ -316,36 +312,36 @@ public class Car {
 	}
 
 	private void updateCachedPolygons() {
-		this.xDotsCachedPolygonCoords = this.xDotsPolygonCoords.clone();
-		this.yDotsCachedPolygonCoords = this.yDotsPolygonCoords.clone();
+		xDotsCachedPolygonCoords = xDotsPolygonCoords.clone();
+		yDotsCachedPolygonCoords = yDotsPolygonCoords.clone();
 
 	}
 
 	public void paint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g.create();
-		g2d.setColor(this.currentColor);
-		if (this.sensor != null && (this.bestCar || this.hunamDrives)) {
-			this.sensor.paint(g2d);
+		g2d.setColor(currentColor);
+		if (sensor != null && (bestCar || humanDrives)) {
+			sensor.paint(g2d);
 		}
-		if(this.damaged){
-			g2d.setColor(this.damagedColor);
+		if (damaged) {
+			g2d.setColor(damagedColor);
 		}
-		g2d.fillPolygon(this.xDotsPolygonCoords, this.yDotsPolygonCoords, this.xDotsPolygonCoords.length);
-		g2d.translate(this.x, this.y);
-		g2d.rotate(this.angle + Math.PI / 2);
-		g2d.translate(-this.x, -this.y);
-		if (this.bestCar) {
-		g2d.drawImage(this.bestCarImage, this.x - (this.bestCarImage.getWidth(null) /
-		2),
-		this.y - (this.bestCarImage.getHeight(null) / 2), null);
+		g2d.fillPolygon(xDotsPolygonCoords, yDotsPolygonCoords, xDotsPolygonCoords.length);
+		g2d.translate(x, y);
+		g2d.rotate(angle + Math.PI / 2);
+		g2d.translate(-x, -y);
+		if (bestCar) {
+			g2d.drawImage(bestCarImage, x - (bestCarImage.getWidth(null) /
+					2),
+					y - (bestCarImage.getHeight(null) / 2), null);
 		} else {
-		g2d.drawImage(this.carImage, this.x - (this.carImage.getWidth(null) / 2),
-		this.y - (this.carImage.getHeight(null) / 2), null);
+			g2d.drawImage(carImage, x - (carImage.getWidth(null) / 2),
+					y - (carImage.getHeight(null) / 2), null);
 		}
 
-		g2d.translate(this.x, this.y);
-		g2d.rotate(-this.angle - Math.PI / 2);
-		g2d.translate(-this.x, -this.y);
+		g2d.translate(x, y);
+		g2d.rotate(-angle - Math.PI / 2);
+		g2d.translate(-x, -y);
 
 	}
 }

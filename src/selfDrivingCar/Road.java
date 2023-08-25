@@ -73,12 +73,12 @@ public class Road {
 
 	private void getRoadPaintedLines(int canvasWidth) {
 
-		int firstLineX = this.x - this.roadWidth / 2;
-		int lastLineX = this.x + this.roadWidth / 2;
-		for (int i = 0; i < (this.lanesCount + 1); ++i) {
+		int firstLineX = x - roadWidth / 2;
+		int lastLineX = x + roadWidth / 2;
+		for (int i = 0; i < (lanesCount + 1); ++i) {
 			if (i == 0) {
 				roadLinesX[i] = firstLineX;
-			} else if (i == this.lanesCount) {
+			} else if (i == lanesCount) {
 				roadLinesX[i] = lastLineX;
 			} else {
 				roadLinesX[i] = firstLineX + i * laneWidth;
@@ -98,7 +98,7 @@ public class Road {
 			roadMiddleLaneCoordsList.add(step);
 		}
 
-		int stepRoadArrayLength = (this.lanesCount - 1) * 2;
+		int stepRoadArrayLength = (lanesCount - 1) * 2;
 		for (int y = 0; y > -curveLength; y--) {
 			ArrayList<Double> roadStep = new ArrayList<Double>();
 			for (int j = 0; j < stepRoadArrayLength; ++j) {
@@ -149,8 +149,8 @@ public class Road {
 		// g2d.setColor(Color.WHITE);
 
 		// g2d.setStroke(plainStroke);
-		// g2d.drawLine((int) roadLinesX[0], this.top, (int) roadLinesX[0],
-		// this.bottom);
+		// g2d.drawLine((int) roadLinesX[0], top, (int) roadLinesX[0],
+		// bottom);
 		// g2d.setStroke(dashed);
 		// g2d.translate(0, top);
 		// g2d.drawPolyline(roadMiddleLaneDrawCoordsArray[0],
@@ -160,8 +160,8 @@ public class Road {
 		// roadMiddleLaneCoordsList.size());
 		// g2d.translate(0, -top);
 		// g2d.setStroke(plainStroke);
-		// g2d.drawLine((int) roadLinesX[3], this.top, (int) roadLinesX[3],
-		// this.bottom);
+		// g2d.drawLine((int) roadLinesX[3], top, (int) roadLinesX[3],
+		// bottom);
 		// g2d.setStroke(plainStroke);
 
 		// for (int i = 0; i <roadMiddleLaneDrawCoordsArray.length ; ++i) {
@@ -172,11 +172,11 @@ public class Road {
 		// roadMiddleLaneDrawCoordsArray[0].length);
 		// } else {
 		// g2d.setStroke(plainStroke);
-		// g2d.drawLine((int) roadLinesX[i], this.top, (int) roadLinesX[i],
-		// this.bottom);
+		// g2d.drawLine((int) roadLinesX[i], top, (int) roadLinesX[i],
+		// bottom);
 		// }
 		// }
-		g2d.drawImage(this.roadImage, 0, top, null);
+		g2d.drawImage(roadImage, 0, top, null);
 		// g2d.dispose();
 	}
 }

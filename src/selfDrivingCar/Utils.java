@@ -64,7 +64,7 @@ public class Utils {
 	}
 
 	public static Intersections getIntersection(double Ax, double Ay, double Bx, double By, double Cx, double Cy,
-			double Dx, double Dy, gameSelfDrivingCar gameclass) {
+			double Dx, double Dy) {
 		double tTop = (Dx - Cx) * (Ay - Cy) - (Dy - Cy) * (Ax - Cx);
 		double uTop = (Cy - Ay) * (Ax - Bx) - (Cx - Ax) * (Ay - By);
 		double bottom = (Dy - Cy) * (Bx - Ax) - (Dx - Cx) * (By - Ay);
@@ -87,7 +87,7 @@ public class Utils {
 	}
 
 	public static boolean polysIntersect(Car car,
-			ArrayList<ArrayList<Double>> roadBorders, int paintLineX, Car traffBot, gameSelfDrivingCar gameclass) {
+			ArrayList<ArrayList<Double>> roadBorders, int paintLineX, Car traffBot) {
 		for (int i = 0; i < car.xDotsPolygonCoords.length; ++i) {
 			if (roadBorders != null) {
 				for (int j = car.roadListYIndexAreaMin; j < car.roadListYIndexAreaMax; ++j) {
@@ -98,8 +98,7 @@ public class Utils {
 							roadBorders.get(j).get(paintLineX),
 							roadBorders.get(j).get(paintLineX + 1),
 							roadBorders.get(j + 1).get(paintLineX),
-							roadBorders.get(j + 1).get(paintLineX + 1),
-							gameclass);
+							roadBorders.get(j + 1).get(paintLineX + 1));
 
 					if (touch != null) {
 						return true;
@@ -120,8 +119,8 @@ public class Utils {
 								traffBot.xDotsPolygonCoords[j],
 								traffBot.yDotsPolygonCoords[j],
 								traffBot.xDotsPolygonCoords[j == traffBot.yDotsPolygonCoords.length - 1 ? 0 : j + 1],
-								traffBot.yDotsPolygonCoords[j == traffBot.yDotsPolygonCoords.length - 1 ? 0 : j + 1],
-								gameclass);
+								traffBot.yDotsPolygonCoords[j == traffBot.yDotsPolygonCoords.length - 1 ? 0 : j + 1]
+								);
 
 						if (touch != null) {
 							// System.out.println(touch.getX() + " " + touch.getY() + " " +

@@ -13,15 +13,15 @@ public class Intersections implements Comparable<Intersections> {
 	}
 
 	public double getOffset() {
-		return this.offset;
+		return offset;
 	}
 
 	public double getX() {
-		return this.x;
+		return x;
 	}
 
 	public double getY() {
-		return this.y;
+		return y;
 	}
 
 	@Override

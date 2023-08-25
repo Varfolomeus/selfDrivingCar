@@ -20,13 +20,13 @@ public class NNLevel implements Cloneable {
 
     public void randomize() {
         Random random = new Random();
-        for (int i = 0; i < this.levelInputs.length; ++i) {
-            for (int j = 0; j < this.levelOutputs.length; ++j) {
-                this.weights[i][j] = random.nextDouble() * 2 - 1;
+        for (int i = 0; i < levelInputs.length; ++i) {
+            for (int j = 0; j < levelOutputs.length; ++j) {
+                weights[i][j] = random.nextDouble() * 2 - 1;
             }
         }
-        for (int i = 0; i < this.biases.length; ++i) {
-            this.biases[i] = random.nextDouble() * 2 - 1;
+        for (int i = 0; i < biases.length; ++i) {
+            biases[i] = random.nextDouble() * 2 - 1;
         }
         ;
     }
@@ -34,14 +34,12 @@ public class NNLevel implements Cloneable {
     @Override
     public Object clone() throws CloneNotSupportedException {
         NNLevel newNNlevel = (NNLevel) super.clone();
-        // NNLevel newNNlevel = new NNLevel(this.levelInputs.length,
-        // this.levelOutputs.length, this.activationValue);
-        newNNlevel.levelInputs = this.levelInputs.clone();
-        newNNlevel.levelOutputs = this.levelOutputs.clone();
-        newNNlevel.biases = this.biases.clone();
-        newNNlevel.weights = new double[this.weights.length][];
-        for (int i = 0; i < this.weights.length; i++) {
-            newNNlevel.weights[i] = this.weights[i].clone();
+        newNNlevel.levelInputs = levelInputs.clone();
+        newNNlevel.levelOutputs = levelOutputs.clone();
+        newNNlevel.biases = biases.clone();
+        newNNlevel.weights = new double[weights.length][];
+        for (int i = 0; i < weights.length; i++) {
+            newNNlevel.weights[i] = weights[i].clone();
         }
         return newNNlevel;
     }

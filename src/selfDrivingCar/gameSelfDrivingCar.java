@@ -6,8 +6,8 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import javax.swing.*;
 import java.util.*;
-// import java.util.concurrent.ExecutorService;
-// import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class gameSelfDrivingCar extends JFrame {
 
@@ -57,9 +57,8 @@ public class gameSelfDrivingCar extends JFrame {
 	public ArrayList<Car> cars;
 	public ArrayList<Car> traffic;
 	public Car bestCar;
-
+	public Car userCar;
 	public SaveGame savedGame;
-	public Controls controls;
 	public CarCanvas carCanvas;
 	public boolean mutations = false;
 	public boolean reloadRoadIfRestart = false;
@@ -70,8 +69,8 @@ public class gameSelfDrivingCar extends JFrame {
 	public boolean gamereloading;
 
 	public static void main(String[] args) {
-		// SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
-		new gameSelfDrivingCar().go();
+		SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
+		// new gameSelfDrivingCar().go();
 	}
 
 	void go() {
@@ -91,7 +90,6 @@ public class gameSelfDrivingCar extends JFrame {
 		getSavedGame();
 		if (savedGame == null) {
 			comboBox = new JComboBox<String>(new String[] { "no saved data", "save game onse", "press 's' " });
-			controls = new Controls("KEYS", this);
 		} else {
 			comboBox = new JComboBox<String>(getMenuItems());
 		}
@@ -163,26 +161,31 @@ public class gameSelfDrivingCar extends JFrame {
 		traffic = generateTraffic(trafficCascades);
 		container.requestFocus();
 
-		// int numberOfCores = Runtime.getRuntime().availableProcessors();
-		// ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
+		int numberOfCores = Runtime.getRuntime().availableProcessors();
+		ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
 
-		// executorService.submit(() -> {
+		executorService.submit(() -> {
 			while (!isGameOver) {
 				for (Car carobj : cars) {
-					if (!carobj.damaged || carobj.hunamDrives) {
-						carobj.carMove(this);
+					if (!carobj.damaged || carobj.humanDrives) {
+						carobj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+
 					}
+
+				}
+				if (userKeyEvent != 0) {
+					userKeyEvent = 0;
 				}
 				for (Car traphObj : traffic) {
-					traphObj.carMove(this);
+					traphObj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
 				}
 
 				int bestCarIndex = 0;
 				int YbestCar = road.bottom;
 				for (int i = 0; i < cars.size(); ++i) {
-					if (cars.get(i).y < YbestCar) {
+					cars.get(i).bestCar = false;
+					if (cars.get(i).y < YbestCar && !cars.get(i).humanDrives) {
 						YbestCar = cars.get(i).y;
-						cars.get(i).bestCar = false;
 						bestCarIndex = i;
 					}
 					;
@@ -208,7 +211,7 @@ public class gameSelfDrivingCar extends JFrame {
 				} catch (InterruptedException e1) {
 				}
 			}
-		// });
+		});
 	}
 
 	private void optionsRadioButtonsSetup(gameSelfDrivingCar gameClass) {
@@ -262,9 +265,9 @@ public class gameSelfDrivingCar extends JFrame {
 	private void viewImageGamePannelSetup(gameSelfDrivingCar gameClass) {
 		gameClass.container.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				// System.out.println(e.getKeyCode());
 				int keyevent = e.getKeyCode();
 				checkKeyActions(keyevent);
+				// System.out.println(e.getKeyCode());
 			}
 		});
 	}
@@ -367,35 +370,60 @@ public class gameSelfDrivingCar extends JFrame {
 	}
 
 	private void checkKeyActions(int keyevent) {
-		this.userKeyEvent = keyevent;
-		if (this.userWantsToPlay) {
-			boolean foundHumendrives = false;
-			for (Car carobj : this.cars) {
-				if (carobj.hunamDrives)
-					foundHumendrives = true;
-			}
-			if (foundHumendrives) {
-				if (this.controls != null) {
-					this.controls = null;
+		// System.out.println(keyevent);
+		userKeyEvent = keyevent;
+		switch (userKeyEvent) {
+			case 44:
+				// < - 44 - chainedmutations enablet or not +
+				chainedmutations = !chainedmutations;
+				if (comboBox.getItemAt(comboBox.getSelectedIndex()).equalsIgnoreCase("chainedmutations")) {
+					yesOption.setSelected(chainedmutations);
+					noOption.setSelected(!chainedmutations);
 				}
-			} else {
-				if (this.controls == null) {
-					this.controls = new Controls("KEYS", this);
+				;
+				userKeyEvent = 0;
+				break;
+			case 76:
+				// l - 76 - load best car brain +
+				getSavedGame();
+				userKeyEvent = 0;
+				break;
+			case 77:
+				// m - 77 - mutations enablet or not +
+				mutations = !mutations;
+				if (comboBox.getItemAt(comboBox.getSelectedIndex()).equalsIgnoreCase("mutations")) {
+					yesOption.setSelected(mutations);
+					noOption.setSelected(!mutations);
 				}
-				this.controls.addKeyboardListeners(this);
-			}
-
-			;
-		} else {
-			if (this.controls == null) {
-				this.controls = new Controls("KEYS", this);
-			}
-			this.controls.addKeyboardListeners(this);
+				;
+				userKeyEvent = 0;
+				break;
+			case 78:
+				// n - 78 - new game +
+				gamereloading = true;
+				userKeyEvent = 0;
+				break;
+			case 83:
+				// s - 83 - save best car brain +
+				saveGame();
+				userKeyEvent = 0;
+				break;
+			case 85:
+				// u - 85 - use saved brain in new car generation --
+				useSavedBrain = !useSavedBrain;
+				if (comboBox.getItemAt(comboBox.getSelectedIndex()).equalsIgnoreCase("useSavedBrain")) {
+					yesOption.setSelected(useSavedBrain);
+					noOption.setSelected(!useSavedBrain);
+				}
+				;
+				userKeyEvent = 0;
+				break;
 		}
+
 	}
 
 	private void filterDamaged(ArrayList<Car> cars2) {
-		cars2.removeIf(carobj -> carobj.damaged && !carobj.bestCar && !carobj.hunamDrives);
+		cars2.removeIf(carobj -> carobj.damaged && !carobj.bestCar && !carobj.humanDrives);
 	}
 
 	public ArrayList<Car> generateCars(int CarsNumber, boolean mutations) {
@@ -433,13 +461,14 @@ public class gameSelfDrivingCar extends JFrame {
 					}
 				}
 			}
-			if (userWantsToPlay) {
-				carListToBeCreated.add(
-						new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
-								RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
-								NNLayersInput,
-								"KEYS", humanBotMaxSpeed, carStartColor, this));
-			}
+
+		}
+		if (userWantsToPlay) {
+			userCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
+					RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
+					NNLayersInput,
+					"KEYS", humanBotMaxSpeed, carStartColor, this);
+			carListToBeCreated.add(userCar);
 		}
 		return carListToBeCreated;
 	}
@@ -455,11 +484,14 @@ public class gameSelfDrivingCar extends JFrame {
 				carY = -100;
 			else
 				carY -= Math.floor(random.nextDouble() * 200) + 100;
-			int carsNumberInCascade = 1+ random.nextInt(3);
+			int carsNumberInCascade = 1 + random.nextInt(3);
 			int lineNumber = (int) Math.floor(random.nextDouble() * road.lanesCount);
 			for (int j = 0; j < carsNumberInCascade; ++j) {
 				int carX = startBotX + roadLineWidth * (lineNumber++ % road.lanesCount);
-				if (carX> CAR_CANVAS_WIDTH) {System.out.print("YO - THERE IS A CAR OUTSIDE ROAD");};
+				if (carX > CAR_CANVAS_WIDTH) {
+					System.out.print("YO - THERE IS A CAR OUTSIDE ROAD");
+				}
+				;
 				traffic1.add(
 						(new Car(carX, carY, carWidth, carHeight, RAYS_COUNT, RAYS_SPREAD_ANGLE,
 								CAR_DECISIONS_COUNT,
@@ -492,15 +524,12 @@ public class gameSelfDrivingCar extends JFrame {
 					} else {
 						gamefield.set(this, field.get(this.savedGame));
 					}
-				} catch (IllegalArgumentException | IllegalAccessException | CloneNotSupportedException | NoSuchFieldException e) {
+				} catch (IllegalArgumentException | IllegalAccessException | CloneNotSupportedException
+						| NoSuchFieldException e) {
 					e.printStackTrace();
 				}
 			}
-			if (this.userWantsToPlay && controls != null) {
-				controls = null;
-			} else if (!this.userWantsToPlay && controls == null) {
-				controls = new Controls("KEYS", this);
-			}
+
 		} else {
 			// System.out.println("--Saved game not found");
 			this.savedGame = savedGame;
@@ -530,22 +559,40 @@ public class gameSelfDrivingCar extends JFrame {
 			g2d.fillRect(0, 0, getWidth(), getHeight());
 
 			if (cars.size() > 0) {
-				g2d.translate(0, (int) (-bestCar.y + CAR_CANVAS_HEIGHT * 0.7));
+				if (userWantsToPlay && userCar != null) {
+					g2d.translate(0, (int) (-userCar.y + CAR_CANVAS_HEIGHT * 0.7));
+				} else if (bestCar != null) {
+					g2d.translate(0, (int) (-bestCar.y + CAR_CANVAS_HEIGHT * 0.7));
+				}
 			}
 			road.paint(g2d);
 			for (Car carObj : traffic) {
 				carObj.paint(g2d);
 			}
 			for (Car carObj : cars) {
-				if (!carObj.bestCar) {
-					carObj.paint(g2d);
+				if (userWantsToPlay) {
+					if (!carObj.humanDrives) {
+						carObj.paint(g2d);
+					}
+				} else {
+					if (!carObj.bestCar) {
+						carObj.paint(g2d);
+					}
 				}
-			}
-			if (bestCar != null)
-				bestCar.paint(g2d);
 
+			}
+			if (bestCar != null) {
+				bestCar.paint(g2d);
+			}
+			if (userCar != null) {
+				userCar.paint(g2d);
+			}
 			if (cars.size() > 0) {
-				g2d.translate(0, (int) -(-bestCar.y + CAR_CANVAS_HEIGHT * 0.7));
+				if (userWantsToPlay && userCar != null) {
+					g2d.translate(0, (int) -(-userCar.y + CAR_CANVAS_HEIGHT * 0.7));
+				} else if (bestCar != null) {
+					g2d.translate(0, (int) -(-bestCar.y + CAR_CANVAS_HEIGHT * 0.7));
+				}
 			}
 
 			int startTextY = 45;
