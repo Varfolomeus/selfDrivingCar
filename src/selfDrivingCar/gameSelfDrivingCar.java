@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class gameSelfDrivingCar extends JFrame {
 
@@ -69,8 +70,8 @@ public class gameSelfDrivingCar extends JFrame {
 	public boolean gamereloading;
 
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
-		// new gameSelfDrivingCar().go();
+		// SwingUtilities.invokeLater(() -> new gameSelfDrivingCar().go());
+		new gameSelfDrivingCar().go();
 	}
 
 	void go() {
@@ -164,54 +165,54 @@ public class gameSelfDrivingCar extends JFrame {
 		int numberOfCores = Runtime.getRuntime().availableProcessors();
 		ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
 
-		executorService.submit(() -> {
-			while (!isGameOver) {
-				for (Car carobj : cars) {
-					if (!carobj.damaged || carobj.humanDrives) {
-						carobj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+		while (!isGameOver) {
+			ArrayList<Future<?>> traffFutures = new ArrayList<>();
+			ArrayList<Future<?>> carsFutures = new ArrayList<>();
 
-					}
-
-				}
-				if (userKeyEvent != 0) {
-					userKeyEvent = 0;
-				}
-				for (Car traphObj : traffic) {
-					traphObj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+			for (Car carobj : cars) {
+				if (!carobj.damaged || carobj.humanDrives) {
+					carobj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
 				}
 
-				int bestCarIndex = 0;
-				int YbestCar = road.bottom;
-				for (int i = 0; i < cars.size(); ++i) {
-					cars.get(i).bestCar = false;
-					if (cars.get(i).y < YbestCar && !cars.get(i).humanDrives) {
-						YbestCar = cars.get(i).y;
-						bestCarIndex = i;
-					}
-					;
-				}
-				bestCar = cars.get(bestCarIndex);
-				bestCar.bestCar = true;
-				try {
-					savedBrain = (NNetwork) bestCar.brain.clone();
-				} catch (CloneNotSupportedException e1) {
-					e1.printStackTrace();
+			}
+			if (userKeyEvent != 0) {
+				userKeyEvent = 0;
+			}
+			for (Car traphObj : traffic) {
+				traphObj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+			}
+
+			int bestCarIndex = 0;
+			int YbestCar = road.bottom;
+			for (int i = 0; i < cars.size(); ++i) {
+				cars.get(i).bestCar = false;
+				if (cars.get(i).y < YbestCar && !cars.get(i).humanDrives) {
+					YbestCar = cars.get(i).y;
+					bestCarIndex = i;
 				}
 				;
-
-				carCanvas.updateCanvas();
-				networkCanvas.updateCanvas(bestCar.brain);
-				filterDamaged(cars);
-				if (gamereloading) {
-					restartGame(this);
-					gamereloading = !gamereloading;
-				}
-				try {
-					Thread.sleep(sleeptime);
-				} catch (InterruptedException e1) {
-				}
 			}
-		});
+			bestCar = cars.get(bestCarIndex);
+			bestCar.bestCar = true;
+			try {
+				savedBrain = (NNetwork) bestCar.brain.clone();
+			} catch (CloneNotSupportedException e1) {
+				e1.printStackTrace();
+			}
+			;
+
+			carCanvas.updateCanvas();
+			networkCanvas.updateCanvas(bestCar.brain);
+			filterDamaged(cars);
+			if (gamereloading) {
+				restartGame(this);
+				gamereloading = !gamereloading;
+			}
+			try {
+				Thread.sleep(sleeptime);
+			} catch (InterruptedException e1) {
+			}
+		}
 	}
 
 	private void optionsRadioButtonsSetup(gameSelfDrivingCar gameClass) {
