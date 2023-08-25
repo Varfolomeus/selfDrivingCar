@@ -170,18 +170,37 @@ public class gameSelfDrivingCar extends JFrame {
 			ArrayList<Future<?>> carsFutures = new ArrayList<>();
 
 			for (Car carobj : cars) {
-				if (!carobj.damaged || carobj.humanDrives) {
-					carobj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
-				}
+				carsFutures.add(executorService.submit((Runnable) () -> {
+					if (!carobj.damaged || carobj.humanDrives) {
+						carobj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+					}
+				}));
 
 			}
 			if (userKeyEvent != 0) {
 				userKeyEvent = 0;
 			}
 			for (Car traphObj : traffic) {
-				traphObj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+				traffFutures.add(executorService.submit((Runnable) () -> {
+
+					traphObj.carMove(0, null, null, null);
+				}));
 			}
 
+			for (Future<?> future : traffFutures) {
+				try {
+					future.get();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			for (Future<?> future : carsFutures) {
+				try {
+					future.get();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 			int bestCarIndex = 0;
 			int YbestCar = road.bottom;
 			for (int i = 0; i < cars.size(); ++i) {
