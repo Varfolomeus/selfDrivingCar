@@ -60,6 +60,7 @@ public class gameSelfDrivingCar extends JFrame {
 	public CopyOnWriteArrayList<Car> traffic;
 	public Car bestCar;
 	public Car userCar;
+	public int YbestCar;
 	public SaveGame savedGame;
 	public CarCanvas carCanvas;
 	public boolean mutations = false;
@@ -89,7 +90,6 @@ public class gameSelfDrivingCar extends JFrame {
 		viewImageGamePannel = new JPanel();
 		yesOption = new JRadioButton("Yes");
 		noOption = new JRadioButton("No");
-
 		botMaxSpeed = 2;
 		dummyMaxSpeed = 3;
 		humanBotMaxSpeed = 3;
@@ -147,6 +147,7 @@ public class gameSelfDrivingCar extends JFrame {
 		gameFrame.setVisible(true);
 		savedTime = System.currentTimeMillis();
 		savedFrameTime = savedTime;
+
 		if (savedGame != null) {
 			Car testCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
 					Math.PI * RAYS_SPREAD_ANGLE_timser, CAR_DECISIONS_COUNT, NNLayersInput, "AI", botMaxSpeed,
@@ -192,7 +193,6 @@ public class gameSelfDrivingCar extends JFrame {
 			}
 			for (Car traphObj : traffic) {
 				traffFutures.add(executorService.submit((Runnable) () -> {
-
 					traphObj.carMove(0, null, null, null);
 				}));
 			}
@@ -211,24 +211,7 @@ public class gameSelfDrivingCar extends JFrame {
 					e.printStackTrace();
 				}
 			}
-			int bestCarIndex = 0;
-			int YbestCar = road.bottom;
-			for (int i = 0; i < cars.size(); ++i) {
-				cars.get(i).bestCar = false;
-				if (cars.get(i).y < YbestCar && !cars.get(i).humanDrives) {
-					YbestCar = cars.get(i).y;
-					bestCarIndex = i;
-				}
-				;
-			}
-			bestCar = cars.get(bestCarIndex);
-			bestCar.bestCar = true;
-			try {
-				savedBrain = (NNetwork) bestCar.brain.clone();
-			} catch (CloneNotSupportedException e1) {
-				e1.printStackTrace();
-			}
-			;
+			getCurrentBestCar();
 
 			carCanvas.updateCanvas();
 			networkCanvas.updateCanvas(bestCar.brain);
@@ -238,16 +221,34 @@ public class gameSelfDrivingCar extends JFrame {
 				gamereloading = !gamereloading;
 			}
 			currentFrameTime = System.currentTimeMillis();
-			frameTime = currentFrameTime-savedFrameTime;
-		;
+			frameTime = currentFrameTime - savedFrameTime;
+			;
 			try {
-				Thread.sleep(((currentFrameTime - savedFrameTime) > sleeptime ? (sleeptime>20? sleeptime:20):20));
+				Thread.sleep((frameTime > sleeptime ? (sleeptime > 20 ? sleeptime : 20) : 20));
 			} catch (InterruptedException e1) {
-			}			
+			}
 			savedFrameTime = currentFrameTime;
 
 		}
 		executorService.shutdown();
+	}
+
+	private void getCurrentBestCar() {
+		YbestCar = road.bottom;
+		cars.forEach(car -> {
+			car.bestCar = false;
+			if (car.y < YbestCar && !car.humanDrives) {
+				bestCar = car;
+				YbestCar = car.y;
+			}
+		});
+		bestCar.bestCar = true;
+		try {
+			savedBrain = (NNetwork) bestCar.brain.clone();
+		} catch (CloneNotSupportedException e1) {
+			e1.printStackTrace();
+		}
+		;
 	}
 
 	private void optionsRadioButtonsSetup(gameSelfDrivingCar gameClass) {
@@ -733,7 +734,8 @@ public class gameSelfDrivingCar extends JFrame {
 				g2d.setColor(Color.BLACK);
 				g2d.fillArc(x - (int) (nodeRadius / 2), bottom - (int) nodeRadius / 2, nodeRadius, nodeRadius, 0, 360);
 				g2d.setColor(Utils.getRGBA(inputs[i]));
-				g2d.fillArc(x - (int) nodeRadius / 3, bottom - (int) nodeRadius / 3, (int) Math.round(nodeRadius * 0.6),
+				g2d.fillArc(x - (int) Math.floor(nodeRadius / 3.2), bottom - (int) Math.floor(nodeRadius / 3.2),
+						(int) Math.round(nodeRadius * 0.6),
 						(int) Math.round(nodeRadius * 0.6),
 						0, 360);
 			}

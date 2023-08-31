@@ -37,13 +37,12 @@ public class Car {
 	private double raysSpreadAngle;
 	public int[] xDotsPolygonCoords;
 	public int[] yDotsPolygonCoords;
-	public int[] xDotsCachedPolygonCoords;
-	public int[] yDotsCachedPolygonCoords;
 	public Sensor sensor;
 	public Image carImage;
 	public Image bestCarImage;
 	public NNetwork brain;
 	private Controls controls;
+	private int canvasWidth;
 
 	public Car(int x, int y, int carWidth, int carHeight, int raysCount, double raysSpreadAngle,
 			int carDecisionCount, String NNLayersInput, String controlType, double maxSpeed, Color color,
@@ -52,6 +51,7 @@ public class Car {
 		this.roadListYIndexAreaMax = 0;
 		this.roadListYIndexAreaMin = 0;
 		this.x1 = this.x;
+		this.canvasWidth = gameclass.CAR_CANVAS_WIDTH;
 		this.y = y;
 		this.bestCar = false;
 		this.normalColor = color;
@@ -67,8 +67,6 @@ public class Car {
 		this.height = carHeight;
 		this.xDotsPolygonCoords = new int[4];
 		this.yDotsPolygonCoords = new int[4];
-		this.xDotsCachedPolygonCoords = new int[4];
-		this.yDotsCachedPolygonCoords = new int[4];
 		this.createPolygon();
 		this.speed = 0;
 		this.maxSpeed = maxSpeed;
@@ -152,7 +150,7 @@ public class Car {
 
 	private boolean isOutsider(Car bestCar) {
 		if (bestCar != null) {
-			return !this.bestCar && y - bestCar.y > toBestCarMaxDistance;
+			return !this.bestCar && (y - bestCar.y > toBestCarMaxDistance || x<0 || x> canvasWidth);
 		} else {
 			return false;
 		}
@@ -309,14 +307,8 @@ public class Car {
 
 		;
 		createPolygon();
-		updateCachedPolygons();
 	}
 
-	private void updateCachedPolygons() {
-		xDotsCachedPolygonCoords = xDotsPolygonCoords.clone();
-		yDotsCachedPolygonCoords = yDotsPolygonCoords.clone();
-
-	}
 
 	public void paint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g.create();

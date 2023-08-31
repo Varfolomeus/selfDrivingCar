@@ -22,7 +22,7 @@ public class Controls {
 		switch (controlType) {
 			case "KEYS":
 				carReflection(keyevent);
-				System.out.println(keyevent);
+//				System.out.println(keyevent);
 				break;
 			// case "AI":
 			// carReflection (gameclass);
