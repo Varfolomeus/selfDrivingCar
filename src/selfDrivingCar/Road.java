@@ -42,7 +42,7 @@ public class Road {
 		this.curveLength = (int) Math.floor((waves * 2 * Math.PI) / curveFrequency);
 		this.firstTurnRight = (random.nextDouble() > 0.5) ? 1 : -1;
 		this.infinity = curveLength + 100;
-		this.bottom = 300;
+		this.bottom = 800;
 		this.top = -infinity;
 		this.roadLinesX = new double[this.lanesCount + 1];
 

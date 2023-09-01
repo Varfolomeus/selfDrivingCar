@@ -215,7 +215,7 @@ public class gameSelfDrivingCar extends JFrame {
 
 			carCanvas.updateCanvas();
 			networkCanvas.updateCanvas(bestCar.brain);
-			filterDamaged(cars);
+			filterDamaged();
 			if (gamereloading) {
 				restartGame(this);
 				gamereloading = !gamereloading;
@@ -237,7 +237,7 @@ public class gameSelfDrivingCar extends JFrame {
 		YbestCar = road.bottom;
 		cars.forEach(car -> {
 			car.bestCar = false;
-			if (car.y < YbestCar && !car.humanDrives) {
+			if (car.y < YbestCar && !car.humanDrives&& car.x>0 && car.x <car.canvasWidth) {
 				bestCar = car;
 				YbestCar = car.y;
 			}
@@ -453,8 +453,8 @@ public class gameSelfDrivingCar extends JFrame {
 
 	}
 
-	private void filterDamaged(CopyOnWriteArrayList<Car> cars2) {
-		cars2.removeIf(carobj -> carobj.damaged && !carobj.bestCar && !carobj.humanDrives);
+	private void filterDamaged() {
+		cars.removeIf(carobj -> carobj.damaged && !carobj.bestCar && !carobj.humanDrives);
 	}
 
 	public CopyOnWriteArrayList<Car> generateCars(int CarsNumber, boolean mutations) {

@@ -42,7 +42,7 @@ public class Car {
 	public Image bestCarImage;
 	public NNetwork brain;
 	private Controls controls;
-	private int canvasWidth;
+	public int canvasWidth;
 
 	public Car(int x, int y, int carWidth, int carHeight, int raysCount, double raysSpreadAngle,
 			int carDecisionCount, String NNLayersInput, String controlType, double maxSpeed, Color color,
@@ -148,9 +148,9 @@ public class Car {
 		}
 	}
 
-	private boolean isOutsider(Car bestCar) {
-		if (bestCar != null) {
-			return !this.bestCar && (y - bestCar.y > toBestCarMaxDistance || x<0 || x> canvasWidth);
+	private boolean isOutsider(Car bestCarToCompare) {
+		if (bestCarToCompare != null) {
+			return !bestCar && (y - bestCarToCompare.y > toBestCarMaxDistance || x<0 || x> canvasWidth);
 		} else {
 			return false;
 		}
