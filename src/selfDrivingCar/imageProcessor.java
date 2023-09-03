@@ -9,8 +9,9 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 
 public class imageProcessor {
-	public static Image getImage(Color askedColor, Random random) {
+	public static Image getImage(Color askedColor) {
 		try {
+			Random random=new Random();
 			// Завантажуємо зображення з файлу
 			BufferedImage originalImage = ImageIO.read(new File("img/original.png"));
 

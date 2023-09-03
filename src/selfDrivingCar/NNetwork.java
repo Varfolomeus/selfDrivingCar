@@ -12,8 +12,9 @@ public class NNetwork implements Cloneable {
     this.neuronCounts = neuronCounts;
     this.NNlevels = new NNLevel[this.neuronCounts.length - 1];
     this.activationValue = activationValue;
+
     for (int i = 0; i < this.neuronCounts.length - 1; ++i) {
-      this.NNlevels[i] = new NNLevel(neuronCounts[i], neuronCounts[i + 1], activationValue);
+      this.NNlevels[i] = new NNLevel(this.neuronCounts[i], this.neuronCounts[i + 1], this.activationValue);
     }
   }
 
@@ -56,24 +57,21 @@ public class NNetwork implements Cloneable {
   }
 
   public NNetwork mutate(NNetwork nnNetwork, double amount) {
-    Random random = new Random();
     NNetwork MutatedBrain = null;
     try {
       MutatedBrain = (NNetwork) nnNetwork.clone();
     } catch (CloneNotSupportedException e) {
       e.printStackTrace();
     }
-
+    Random random = new Random();
     for (NNLevel level : MutatedBrain.NNlevels) {
 
       for (int i = 0; i < level.biases.length; i++) {
-        double pp = Utils.lerp(level.biases[i], random.nextDouble() * 2 - 1, amount);
-        level.biases[i] = pp;
+        level.biases[i] = Utils.lerp(level.biases[i], random.nextDouble() * 2 - 1, amount);
       }
       for (int i = 0; i < level.weights.length; i++) {
         for (int j = 0; j < level.weights[i].length; j++) {
-          double uu = Utils.lerp(level.weights[i][j], random.nextDouble() * 2 - 1, amount);
-          level.weights[i][j] = uu;
+          level.weights[i][j] = Utils.lerp(level.weights[i][j], random.nextDouble() * 2 - 1, amount);
         }
       }
     }

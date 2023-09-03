@@ -39,6 +39,7 @@ public class Car {
 	public int[] yDotsPolygonCoords;
 	public Sensor sensor;
 	public Image carImage;
+	public Image damagedCarImage;
 	public Image bestCarImage;
 	public NNetwork brain;
 	private Controls controls;
@@ -46,12 +47,12 @@ public class Car {
 
 	public Car(int x, int y, int carWidth, int carHeight, int raysCount, double raysSpreadAngle,
 			int carDecisionCount, String NNLayersInput, String controlType, double maxSpeed, Color color,
-			gameSelfDrivingCar gameclass) {
+			int canvaswidth, double flop) {
 		this.x = x;
 		this.roadListYIndexAreaMax = 0;
 		this.roadListYIndexAreaMin = 0;
 		this.x1 = this.x;
-		this.canvasWidth = gameclass.CAR_CANVAS_WIDTH;
+		this.canvasWidth = canvaswidth;
 		this.y = y;
 		this.bestCar = false;
 		this.normalColor = color;
@@ -88,16 +89,17 @@ public class Car {
 			NNLayers.add(raysCount + 1);
 			NNLayers.add(carDecisionCount);
 		}
-		layersNNetwork = new int[NNLayers.size()];
-		layersNNetwork = NNLayers.stream().mapToInt(d -> d).toArray();
+		this.layersNNetwork = NNLayers.stream().mapToInt(d -> d).toArray();
 		if (!controlType.equalsIgnoreCase("DUMMY")) {
 			this.sensor = new Sensor(this.x, this.y, this.raysCount, this.angle, this.raysSpreadAngle, this.height);
-			this.brain = new NNetwork(layersNNetwork, gameclass.FLOP);
+			this.brain = new NNetwork(this.layersNNetwork, flop);
 		}
 		this.controls = new Controls(controlType);
-		this.carImage = imageProcessor.getImage(this.currentColor, gameclass.random).getScaledInstance((int) carWidth,
+		this.carImage = imageProcessor.getImage(this.currentColor).getScaledInstance((int) carWidth,
 				(int) carHeight, Image.SCALE_DEFAULT);
-		this.bestCarImage = imageProcessor.getImage(Color.GREEN, gameclass.random).getScaledInstance((int) carWidth,
+		this.damagedCarImage = imageProcessor.getImage(this.damagedColor).getScaledInstance((int) carWidth,
+				(int) carHeight, Image.SCALE_DEFAULT);
+		this.bestCarImage = imageProcessor.getImage(Color.GREEN).getScaledInstance((int) carWidth,
 				(int) carHeight, Image.SCALE_DEFAULT);
 	}
 
@@ -150,7 +152,7 @@ public class Car {
 
 	private boolean isOutsider(Car bestCarToCompare) {
 		if (bestCarToCompare != null) {
-			return !bestCar && (y - bestCarToCompare.y > toBestCarMaxDistance || x<0 || x> canvasWidth);
+			return !bestCar && (y - bestCarToCompare.y > toBestCarMaxDistance || x < 0 || x > canvasWidth);
 		} else {
 			return false;
 		}
@@ -284,13 +286,12 @@ public class Car {
 		if (Math.abs(speed) < friction) {
 			speed = 0;
 		}
-		;
 		if (angleSpeed > angleMaxSpeed) {
 			angleSpeed = angleMaxSpeed;
 		} else if (angleSpeed < -angleMaxSpeed) {
 			angleSpeed = -angleMaxSpeed;
 		}
-		;
+
 		if (angleSpeed > 0) {
 			angleSpeed -= angleAcceleration / 3;
 		} else if (angleSpeed < 0) {
@@ -300,26 +301,22 @@ public class Car {
 		if (Math.abs(angleSpeed) < angleAcceleration / 2) {
 			angleSpeed = 0;
 		}
-		;
 
 		x += (int) Math.round(speed * Math.cos(angle));
 		y += (int) Math.round(speed * Math.sin(angle));
-
-		;
 		createPolygon();
 	}
 
-
 	public void paint(Graphics g) {
 		Graphics2D g2d = (Graphics2D) g.create();
-		g2d.setColor(currentColor);
+		// g2d.setColor(currentColor);
 		if (sensor != null && (bestCar || humanDrives)) {
 			sensor.paint(g2d);
 		}
-		if (damaged) {
-			g2d.setColor(damagedColor);
-		}
-		g2d.fillPolygon(xDotsPolygonCoords, yDotsPolygonCoords, xDotsPolygonCoords.length);
+		// if (damaged) {
+		// 	g2d.setColor(damagedColor);
+		// }
+		// g2d.fillPolygon(xDotsPolygonCoords, yDotsPolygonCoords, xDotsPolygonCoords.length);
 		g2d.translate(x, y);
 		g2d.rotate(angle + Math.PI / 2);
 		g2d.translate(-x, -y);
@@ -327,7 +324,10 @@ public class Car {
 			g2d.drawImage(bestCarImage, x - (bestCarImage.getWidth(null) /
 					2),
 					y - (bestCarImage.getHeight(null) / 2), null);
-		} else {
+		} else if(damaged) {
+			g2d.drawImage(damagedCarImage, x - (damagedCarImage.getWidth(null) / 2),
+					y - (damagedCarImage.getHeight(null) / 2), null);
+		}else{
 			g2d.drawImage(carImage, x - (carImage.getWidth(null) / 2),
 					y - (carImage.getHeight(null) / 2), null);
 		}
