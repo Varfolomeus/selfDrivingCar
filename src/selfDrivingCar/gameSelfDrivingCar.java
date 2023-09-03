@@ -59,7 +59,11 @@ public class gameSelfDrivingCar extends JFrame {
 	public CopyOnWriteArrayList<Car> traffic;
 	public Car bestCar;
 	public Car userCar;
+	public Image carImage;
+	public Image damagedCarImage;
+	public Image bestCarImage;
 	public int YbestCar;
+	private Image userCarImage;
 	public SaveGame savedGame;
 	public CarCanvas carCanvas;
 	public boolean mutations = false;
@@ -112,6 +116,14 @@ public class gameSelfDrivingCar extends JFrame {
 		carWidth = (int) Math.floor(CAR_CANVAS_WIDTH / 8);
 		carHeight = (int) Math.floor((double) 50 / 30 * carWidth);
 		gameFrame.setBounds(START_LOCATIONX, START_LOCATIONY, WINDOW_WIDTH, WINDOW_HEIGHT + 52);
+		carImage = imageProcessor.getImage(Color.BLUE).getScaledInstance((int) carWidth,
+				(int) carHeight, Image.SCALE_DEFAULT);
+		damagedCarImage = imageProcessor.getImage(Color.RED).getScaledInstance((int) carWidth,
+				(int) carHeight, Image.SCALE_DEFAULT);
+		bestCarImage = imageProcessor.getImage(Color.GREEN).getScaledInstance((int) carWidth,
+				(int) carHeight, Image.SCALE_DEFAULT);
+		userCarImage = imageProcessor.getImage(carStartColor).getScaledInstance((int) carWidth,
+				(int) carHeight, Image.SCALE_DEFAULT);
 		container.setLayout(null);
 		cars = new CopyOnWriteArrayList<Car>();
 		traffic = new CopyOnWriteArrayList<Car>();
@@ -150,7 +162,7 @@ public class gameSelfDrivingCar extends JFrame {
 		if (savedGame != null) {
 			Car testCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
 					Math.PI * RAYS_SPREAD_ANGLE_timser, CAR_DECISIONS_COUNT, NNLayersInput, "AI", botMaxSpeed,
-					Color.BLUE, CAR_CANVAS_WIDTH, FLOP);
+					CAR_CANVAS_WIDTH, FLOP, damagedCarImage, bestCarImage, carImage);
 			if (Arrays.equals(testCar.brain.neuronCounts, savedBrain.neuronCounts)) {
 				useSavedBrain = savedGame.useSavedBrain;
 			} else {
@@ -466,9 +478,8 @@ public class gameSelfDrivingCar extends JFrame {
 
 			carListToBeCreated.add(
 					new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
-							RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
-							NNLayersInput,
-							"AI", botMaxSpeed, Color.BLUE, CAR_CANVAS_WIDTH, FLOP));
+							RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, NNLayersInput, "AI", botMaxSpeed, CAR_CANVAS_WIDTH,
+							FLOP, damagedCarImage, bestCarImage, carImage));
 
 			if (savedBrain != null && useSavedBrain) {
 				if (carListToBeCreated.get(i).useBrain) {
@@ -495,9 +506,8 @@ public class gameSelfDrivingCar extends JFrame {
 		}
 		if (userWantsToPlay) {
 			userCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
-					RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
-					NNLayersInput,
-					"KEYS", humanBotMaxSpeed, carStartColor, CAR_CANVAS_WIDTH, FLOP);
+					RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, NNLayersInput, "KEYS", humanBotMaxSpeed, CAR_CANVAS_WIDTH,
+					FLOP, damagedCarImage, bestCarImage, userCarImage);
 			carListToBeCreated.add(userCar);
 		}
 		return carListToBeCreated;
@@ -523,13 +533,9 @@ public class gameSelfDrivingCar extends JFrame {
 				}
 				;
 				traffic1.add(
-						(new Car(carX, carY, carWidth, carHeight, RAYS_COUNT, RAYS_SPREAD_ANGLE,
-								CAR_DECISIONS_COUNT,
-								NNLayersInput, "DUMMY",
-								dummyMaxSpeed / 4
-										+ random.nextDouble() * dummyMaxSpeed * 3 / 4,
-								null,
-								CAR_CANVAS_WIDTH, FLOP)));
+						(new Car(carX, carY, carWidth, carHeight, RAYS_COUNT, RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
+								NNLayersInput, "DUMMY", dummyMaxSpeed / 4 + random.nextDouble() * dummyMaxSpeed * 3 / 4,
+								CAR_CANVAS_WIDTH, FLOP, damagedCarImage, bestCarImage, carImage)));
 			}
 		}
 		return traffic1;

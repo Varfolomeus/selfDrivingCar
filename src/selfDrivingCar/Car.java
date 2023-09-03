@@ -46,8 +46,8 @@ public class Car {
 	public int canvasWidth;
 
 	public Car(int x, int y, int carWidth, int carHeight, int raysCount, double raysSpreadAngle,
-			int carDecisionCount, String NNLayersInput, String controlType, double maxSpeed, Color color,
-			int canvaswidth, double flop) {
+			int carDecisionCount, String NNLayersInput, String controlType, double maxSpeed,
+			int canvaswidth, double flop, Image damagedCarImage, Image bestCarImage, Image carImage) {
 		this.x = x;
 		this.roadListYIndexAreaMax = 0;
 		this.roadListYIndexAreaMin = 0;
@@ -55,7 +55,6 @@ public class Car {
 		this.canvasWidth = canvaswidth;
 		this.y = y;
 		this.bestCar = false;
-		this.normalColor = color;
 		this.currentColor = this.normalColor;
 		this.damagedColor = Color.red;
 		this.raysCount = raysCount;
@@ -93,14 +92,14 @@ public class Car {
 		if (!controlType.equalsIgnoreCase("DUMMY")) {
 			this.sensor = new Sensor(this.x, this.y, this.raysCount, this.angle, this.raysSpreadAngle, this.height);
 			this.brain = new NNetwork(this.layersNNetwork, flop);
+			this.carImage = carImage;
+		} else {
+			this.carImage = imageProcessor.getImage(null).getScaledInstance((int) carWidth,
+					(int) carHeight, Image.SCALE_DEFAULT);
 		}
 		this.controls = new Controls(controlType);
-		this.carImage = imageProcessor.getImage(this.currentColor).getScaledInstance((int) carWidth,
-				(int) carHeight, Image.SCALE_DEFAULT);
-		this.damagedCarImage = imageProcessor.getImage(this.damagedColor).getScaledInstance((int) carWidth,
-				(int) carHeight, Image.SCALE_DEFAULT);
-		this.bestCarImage = imageProcessor.getImage(Color.GREEN).getScaledInstance((int) carWidth,
-				(int) carHeight, Image.SCALE_DEFAULT);
+		this.damagedCarImage = damagedCarImage;
+		this.bestCarImage = bestCarImage;
 	}
 
 	protected void createPolygon() {
@@ -314,9 +313,10 @@ public class Car {
 			sensor.paint(g2d);
 		}
 		// if (damaged) {
-		// 	g2d.setColor(damagedColor);
+		// g2d.setColor(damagedColor);
 		// }
-		// g2d.fillPolygon(xDotsPolygonCoords, yDotsPolygonCoords, xDotsPolygonCoords.length);
+		// g2d.fillPolygon(xDotsPolygonCoords, yDotsPolygonCoords,
+		// xDotsPolygonCoords.length);
 		g2d.translate(x, y);
 		g2d.rotate(angle + Math.PI / 2);
 		g2d.translate(-x, -y);
@@ -324,10 +324,10 @@ public class Car {
 			g2d.drawImage(bestCarImage, x - (bestCarImage.getWidth(null) /
 					2),
 					y - (bestCarImage.getHeight(null) / 2), null);
-		} else if(damaged) {
+		} else if (damaged) {
 			g2d.drawImage(damagedCarImage, x - (damagedCarImage.getWidth(null) / 2),
 					y - (damagedCarImage.getHeight(null) / 2), null);
-		}else{
+		} else {
 			g2d.drawImage(carImage, x - (carImage.getWidth(null) / 2),
 					y - (carImage.getHeight(null) / 2), null);
 		}
