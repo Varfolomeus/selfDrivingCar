@@ -181,8 +181,9 @@ public class gameSelfDrivingCar extends JFrame {
 		traffic = generateTraffic(trafficCascades);
 		container.requestFocus();
 
-		int numberOfCores = Runtime.getRuntime().availableProcessors();
-		ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
+		// int numberOfCores = Runtime.getRuntime().availableProcessors();
+		// ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
+		ExecutorService executorService = Executors.newCachedThreadPool();
 
 		while (!isGameOver) {
 			ArrayList<Future<?>> traffFutures = new ArrayList<>();
@@ -270,6 +271,9 @@ public class gameSelfDrivingCar extends JFrame {
 					try {
 						Field comboboxActivatedField = gameClass.getClass()
 								.getDeclaredField(gameClass.comboBox.getItemAt(gameClass.comboBox.getSelectedIndex()));
+						if (!gameClass.yesOption.isSelected()) {
+							gameClass.yesOption.setSelected(true);
+						}
 						gameClass.noOption.setSelected(false);
 						if (comboboxActivatedField.get(gameClass) instanceof Boolean) {
 							comboboxActivatedField.set(gameClass, true);
@@ -291,6 +295,9 @@ public class gameSelfDrivingCar extends JFrame {
 					try {
 						Field comboboxActivatedField = gameClass.getClass()
 								.getDeclaredField(gameClass.comboBox.getItemAt(gameClass.comboBox.getSelectedIndex()));
+						if (!gameClass.noOption.isSelected()) {
+							gameClass.noOption.setSelected(true);
+						}
 						gameClass.yesOption.setSelected(false);
 
 						if (comboboxActivatedField.get(gameClass) instanceof Boolean) {
