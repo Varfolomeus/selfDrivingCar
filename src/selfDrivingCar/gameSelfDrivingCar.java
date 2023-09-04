@@ -39,7 +39,8 @@ public class gameSelfDrivingCar extends JFrame {
 	public static double RAYS_SPREAD_ANGLE_timser = 1.75;
 	public static double RAYS_SPREAD_ANGLE;
 	public static int CarsNumber = 10;
-	public static volatile int userKeyEvent = 0;
+	public static volatile int userKeyEventX = 0;
+	public static volatile int userKeyEventY = 0;
 	public static int[] layersNNetwork;
 	public long startTime;
 	final static int CAR_DECISIONS_COUNT = 4;
@@ -151,10 +152,10 @@ public class gameSelfDrivingCar extends JFrame {
 		optionsRadioButtonsSetup(this);
 		comboboxSetup(this);
 		inputFieldSetup(this);
+		carCanvas = new CarCanvas();
 		viewImageGamePannelSetup();
 		road = new Road(CAR_CANVAS_WIDTH, carWidth);
 		trafficCascades = random.nextInt(35) + 5;
-		carCanvas = new CarCanvas();
 		carCanvas.setBounds(0, 0, CAR_CANVAS_WIDTH, CAR_CANVAS_HEIGHT);
 		networkCanvas = new NetworkCanvas();
 		networkCanvas.setBounds(carCanvas.getWidth() + 8, 0, NN_CANVAS_WIDTH, NN_CANVAS_HEIGHT);
@@ -204,20 +205,21 @@ public class gameSelfDrivingCar extends JFrame {
 			for (Car carobj : cars) {
 				carsFutures.add(executorService.submit((Runnable) () -> {
 					if (!carobj.damaged || carobj.humanDrives) {
-						carobj.carMove(userKeyEvent, road, traffic, bestCar == null ? null : bestCar);
+						carobj.carMove(userKeyEventX, userKeyEventY, road, traffic, bestCar == null ? null : bestCar);
 					}
 				}));
 
 			}
 			currentTime = System.currentTimeMillis();
 
-			if (userKeyEvent != 0 && currentTime - savedTime > 500L) {
-				userKeyEvent = 0;
+			if (userKeyEventX != 0 && userKeyEventY == 0 && currentTime - savedTime > 500L) {
+				userKeyEventX = 0;
+				userKeyEventY = 0;
 				savedTime = currentTime;
 			}
 			for (Car traphObj : traffic) {
 				traffFutures.add(executorService.submit((Runnable) () -> {
-					traphObj.carMove(0, null, null, null);
+					traphObj.carMove(0, 0, null, null, null);
 				}));
 			}
 
@@ -337,6 +339,26 @@ public class gameSelfDrivingCar extends JFrame {
 				// System.out.println(e.getKeyCode());
 			}
 		});
+		carCanvas.addMouseMotionListener(new MouseAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				checkMouseActions(e.getX(), e.getY());
+			}
+
+		});
+			carCanvas.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseExited(MouseEvent e) {
+				checkMouseActions(0, 0);
+			}
+
+		});
+	}
+
+	private void checkMouseActions(int xEvent, int yEvent) {
+		// System.out.println("x: " + xEvent + " y: " + yEvent);
+		userKeyEventX = xEvent;
+		userKeyEventY = yEvent;
 	}
 
 	private void inputFieldSetup(gameSelfDrivingCar gameClass) {
@@ -438,8 +460,10 @@ public class gameSelfDrivingCar extends JFrame {
 
 	private void checkKeyActions(int keyevent) {
 		// System.out.println(keyevent);
-		userKeyEvent = keyevent;
-		switch (userKeyEvent) {
+		userKeyEventX = keyevent;
+		userKeyEventY = 0;
+
+		switch (userKeyEventX) {
 			case 44:
 				// < - 44 - chainedmutations enablet or not +
 				chainedmutations = !chainedmutations;
@@ -447,7 +471,6 @@ public class gameSelfDrivingCar extends JFrame {
 					yesOption.setSelected(chainedmutations);
 					noOption.setSelected(!chainedmutations);
 				}
-				;
 				break;
 			case 76:
 				// l - 76 - load best car brain +
@@ -460,7 +483,6 @@ public class gameSelfDrivingCar extends JFrame {
 					yesOption.setSelected(mutations);
 					noOption.setSelected(!mutations);
 				}
-				;
 				break;
 			case 78:
 				// n - 78 - new game +
@@ -477,7 +499,6 @@ public class gameSelfDrivingCar extends JFrame {
 					yesOption.setSelected(useSavedBrain);
 					noOption.setSelected(!useSavedBrain);
 				}
-				;
 				break;
 		}
 
@@ -494,7 +515,6 @@ public class gameSelfDrivingCar extends JFrame {
 		CopyOnWriteArrayList<Car> carListToBeCreated = new CopyOnWriteArrayList<Car>();
 
 		for (int i = 0; i < CarsNumber; ++i) {
-
 			carListToBeCreated.add(
 					new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
 							RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, layersNNetwork, "AI", botMaxSpeed, CAR_CANVAS_WIDTH,
@@ -508,7 +528,6 @@ public class gameSelfDrivingCar extends JFrame {
 						} catch (CloneNotSupportedException e) {
 							e.printStackTrace();
 						}
-						;
 					} else {
 						if (mutations && chainedmutations) {
 							carListToBeCreated.get(i).brain = carListToBeCreated.get(i).brain.mutate(
@@ -550,7 +569,6 @@ public class gameSelfDrivingCar extends JFrame {
 				if (carX > CAR_CANVAS_WIDTH) {
 					System.out.print("YO - THERE IS A CAR OUTSIDE ROAD");
 				}
-				;
 				traffic1.add(
 						(new Car(carX, carY, carWidth, carHeight, RAYS_COUNT, RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
 								layersNNetwork, "DUMMY",
@@ -565,7 +583,6 @@ public class gameSelfDrivingCar extends JFrame {
 		SaveGame savedGameToSet = Utils.getSavedGameFromFile(this);
 		if (savedGameToSet != null) {
 			savedGame = savedGameToSet;
-
 			Field[] fields = savedGame.getClass().getDeclaredFields();
 			for (Field field : fields) {
 				Field gamefield = null;
@@ -585,7 +602,6 @@ public class gameSelfDrivingCar extends JFrame {
 					e.printStackTrace();
 				}
 			}
-
 		} else {
 			// System.out.println("--Saved game not found");
 			savedGame = savedGameToSet;
@@ -660,7 +676,10 @@ public class gameSelfDrivingCar extends JFrame {
 			g2d.drawString("Best brain: " + useSavedBrain, 15, startTextY += textLineHeight);
 			g2d.drawString("Мутації: " + mutations, 15, startTextY += textLineHeight);
 			g2d.drawString("Ланцюг-мутації: " + chainedmutations, 15, startTextY += textLineHeight);
-			g2d.drawString("Н-мережа: " + RAYS_COUNT + "," + NNLayersInput +( NNLayersInput.equalsIgnoreCase("")?"":",") + CAR_DECISIONS_COUNT, 15,
+			g2d.drawString(
+					"Н-мережа: " + RAYS_COUNT + "," + NNLayersInput + (NNLayersInput.equalsIgnoreCase("") ? "" : ",")
+							+ CAR_DECISIONS_COUNT,
+					15,
 					startTextY += textLineHeight);
 			g2d.dispose();
 			repaint();
@@ -687,7 +706,6 @@ public class gameSelfDrivingCar extends JFrame {
 			this.plainStroke = new BasicStroke(1);
 			this.lastLevelArrows = new String[] { "\u2191", "\u2190", "\u2192", "\u2193" };
 			this.r = 10;
-
 		}
 
 		public void updateCanvas(NNetwork networkToDisplay) {

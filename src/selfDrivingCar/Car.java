@@ -24,8 +24,8 @@ public class Car {
 	public static int[] layersNNetwork;
 	public double angle;
 	private double angleSpeed;
-	private static double angleMaxSpeed = 0.09;
-	private static double angleAcceleration = angleMaxSpeed / 2;
+	private static double angleMaxSpeed = 0.1;
+	private static double angleAcceleration = angleMaxSpeed / 5;
 	public boolean damaged;
 	public boolean useBrain;
 	public boolean humanDrives;
@@ -101,8 +101,8 @@ public class Car {
 		yDotsPolygonCoords[3] = (int) Math.round(y - Math.cos(-angle + alpha) * rad);
 	}
 
-	public void carMove(int keyevent, Road road, CopyOnWriteArrayList<Car> traffic, Car bestCar) {
-		move(keyevent);
+	public void carMove(int keyeventX, int keyeventY, Road road, CopyOnWriteArrayList<Car> traffic, Car bestCar) {
+		move(keyeventX, keyeventY);
 		if (useBrain || humanDrives) {
 			getroadArea(road.roadMiddleLaneCoordsList);
 			damaged = accessDamage(road.roadMiddleLaneCoordsList, traffic)
@@ -122,10 +122,12 @@ public class Car {
 			brain.feedForward();
 			if (useBrain) {
 				if (useBrain) {
-					controls.forward = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[0] == 0.0) ? false : true;
+					controls.forward = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[0] == 0.0) ? false
+							: true;
 					controls.left = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[1] == 0.0) ? false : true;
 					controls.right = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[2] == 0.0) ? false : true;
-					controls.reverse = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[3] == 0.0) ? false : true;
+					controls.reverse = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[3] == 0.0) ? false
+							: true;
 				}
 			}
 		}
@@ -235,8 +237,8 @@ public class Car {
 		return false;
 	}
 
-	private void move(int keyevent) {
-		controls.addKeyboardListeners(keyevent);
+	private void move(int xToGet, int yToGet) {
+		controls.addKeyboardListeners(x, y, angle, xToGet, yToGet);
 		if (controls.forward) {
 			speed += acceleration;
 		} else if (controls.reverse) {
@@ -274,12 +276,12 @@ public class Car {
 		}
 
 		if (angleSpeed > 0) {
-			angleSpeed -= angleAcceleration / 3;
+			angleSpeed -= angleAcceleration / 5;
 		} else if (angleSpeed < 0) {
-			angleSpeed += angleAcceleration / 3;
+			angleSpeed += angleAcceleration / 5;
 		}
 
-		if (Math.abs(angleSpeed) < angleAcceleration / 2) {
+		if (Math.abs(angleSpeed) < angleAcceleration && controls.left == false && controls.right == false) {
 			angleSpeed = 0;
 		}
 
