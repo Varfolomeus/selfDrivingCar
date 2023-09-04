@@ -10,8 +10,7 @@ public class Sensor {
 	public ArrayList<CarRay> rays;
 	public ArrayList<Intersections> readings;
 	public ArrayList<Double> offsets;
-	public double speed;
-	public Stroke plainStroke = new BasicStroke(2);
+	public static Stroke plainStroke = new BasicStroke(2);
 	public int raysCount;
 	public double raysSpreadAngle;
 
@@ -22,19 +21,18 @@ public class Sensor {
 		this.rays = new ArrayList<CarRay>();
 		this.readings = new ArrayList<Intersections>();
 		this.offsets = new ArrayList<Double>();
-
-		this.castCarRays(x, y, angle);
+		castCarRays(x, y, angle, this.raysCount, this.raysSpreadAngle, this.rayLength, this.rays);
 	}
 
-	public void castCarRays(int x, int y, double angle) {
-		Point centerPoint = new Point(x, y);
+	public static void castCarRays(int x, int y,double angle, int raysCount, double raysSpreadAngle, double rayLength, ArrayList<CarRay> rays ) {
+		Point centerPoint = new Point(x, y);  
 		for (int i = 0; i < raysCount; ++i) {
 			double rayAngle = Utils.lerp(raysSpreadAngle / 2, -raysSpreadAngle / 2,
 					(raysCount == 1) ? 0.5 : ((double) i / ((double) raysCount - 1))) - angle - Math.PI / 2;
 			double rayEndX = x - Math.sin(rayAngle) * rayLength;
 			double rayEndY = y - Math.cos(rayAngle) * rayLength;
 			Point rayEndPoint = new Point(rayEndX, rayEndY);
-			if (rays == null) {
+			if (rays.size()==0) {
 				rays.add(new CarRay(centerPoint, rayEndPoint, null));
 			} else if (rays.size() == i) {
 				rays.add(new CarRay(centerPoint, rayEndPoint, null));
@@ -46,7 +44,7 @@ public class Sensor {
 		}
 	}
 
-	public void getReading(Car car, Road road, CopyOnWriteArrayList<Car> traffic) {
+	public static void getReading(Car car, Road road, CopyOnWriteArrayList<Car> traffic) {
 		for (int k = 0; k < car.sensor.rays.size(); ++k) {
 			ArrayList<Intersections> touches = new ArrayList<Intersections>();
 			for (int i = 0; i < road.roadMiddleLaneCoordsList.get(0).size() -

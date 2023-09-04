@@ -15,7 +15,7 @@ public class NNLevel implements Cloneable {
         this.biases = new double[levelOutputs];
         this.activationValue = activationValue;
         this.weights = new double[levelInputs][levelOutputs];
-        this.randomize();
+        randomize();
     }
 
     public void randomize() {
@@ -44,8 +44,7 @@ public class NNLevel implements Cloneable {
         return newNNlevel;
     }
 
-    public double[] feedForward(double[] givenInputs, NNLevel level, boolean lastLevel) {
-        System.arraycopy(givenInputs, 0, level.levelInputs, 0, givenInputs.length);
+    public double[] feedForward(NNLevel level, boolean lastLevel) {
 
         for (int i = 0; i < level.levelOutputs.length; ++i) {
             double sum = 0;

@@ -1,6 +1,5 @@
 package selfDrivingCar;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 public class NNetwork implements Cloneable {
@@ -18,32 +17,13 @@ public class NNetwork implements Cloneable {
     }
   }
 
-  public int[] feedForward(double[] givenInputs, NNetwork NNetwork) {
-    int[] outputs = null;
-    ArrayList<double[]> middleLayerOutputs = new ArrayList<double[]>();
-
-    for (int i = 0; i < NNetwork.NNlevels.length; i++) {
-      if (i == 0) {
-        double[] middleLayerOut = new double[NNetwork.NNlevels[i].levelOutputs.length];
-        middleLayerOut = NNetwork.NNlevels[i].feedForward(givenInputs, NNetwork.NNlevels[i],
-            i == NNetwork.NNlevels.length - 1);
-        middleLayerOutputs.add(middleLayerOut);
-      } else if (i > 0 && i < NNetwork.NNlevels.length - 1) {
-        double[] middleLayerOut = new double[NNetwork.NNlevels[i].levelOutputs.length];
-        middleLayerOut = NNetwork.NNlevels[i].feedForward(middleLayerOutputs.get(i - 1), NNetwork.NNlevels[i],
-            i == NNetwork.NNlevels.length - 1);
-        middleLayerOutputs.add(middleLayerOut);
-      } else {
-        double[] doubleNNOutputs = new double[NNetwork.NNlevels[i].levelOutputs.length];
-        doubleNNOutputs = NNetwork.NNlevels[i].feedForward(middleLayerOutputs.get(i - 1), NNetwork.NNlevels[i],
-            i == NNetwork.NNlevels.length - 1);
-        outputs = new int[NNetwork.NNlevels[i].levelOutputs.length];
-        for (int j = 0; j < doubleNNOutputs.length; ++j) {
-          outputs[j] = (int) doubleNNOutputs[j];
-        }
+  public void feedForward() {
+    for (int i = 0; i < NNlevels.length; i++) {
+      NNlevels[i].levelOutputs = NNlevels[i].feedForward(NNlevels[i], i == NNlevels.length - 1);
+      if (i < NNlevels.length - 1) {
+        NNlevels[i + 1].levelInputs = NNlevels[i].levelOutputs;
       }
     }
-    return outputs;
   }
 
   @Override

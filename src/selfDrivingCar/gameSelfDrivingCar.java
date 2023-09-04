@@ -16,68 +16,69 @@ public class gameSelfDrivingCar extends JFrame {
 	private static final long serialVersionUID = -8258954113971711416L;
 	public final String SCREEN_TITLE = "Game: Self-driving car...";
 	public final String CAME_OVER = "Game over, will restart in a fiew moments";
-	public final String saveFilePath = "img/savedBrain.json";
-	JFrame gameFrame;
-	JPanel paramsGamePannel;
-	JPanel viewImageGamePannel;
-	Container container;
-	public boolean userWantsToPlay;
-	public double botMaxSpeed;
-	public double dummyMaxSpeed;
-	public double humanBotMaxSpeed;
-	public int WINDOW_HEIGHT = 1000;
-	public int WINDOW_WIDTH = 700;
-	final int START_LOCATIONX = 100;
-	final int START_LOCATIONY = 100;
-	public JComboBox<String> comboBox;
-	public JTextField inputField;
-	public JRadioButton yesOption;
-	public JRadioButton noOption;
-	public NNetwork savedBrain;
-	public int sleeptime = 40;
-	public int RAYS_COUNT = 13;
-	public double RAYS_SPREAD_ANGLE_timser = 1.75;
-	public double RAYS_SPREAD_ANGLE;
-	public int CarsNumber = 10;
-	public volatile int userKeyEvent = 0;
+	public static final String saveFilePath = "img/savedBrain.json";
+	private static JFrame gameFrame;
+	private static JPanel paramsGamePannel;
+	private static JPanel viewImageGamePannel;
+	private static Container container;
+	public static boolean userWantsToPlay;
+	public static double botMaxSpeed;
+	public static double dummyMaxSpeed;
+	public static double humanBotMaxSpeed;
+	public static int WINDOW_HEIGHT = 1000;
+	public static int WINDOW_WIDTH = 700;
+	final static int START_LOCATIONX = 100;
+	final static int START_LOCATIONY = 100;
+	public static JComboBox<String> comboBox;
+	public static JTextField inputField;
+	public static JRadioButton yesOption;
+	public static JRadioButton noOption;
+	public static NNetwork savedBrain;
+	public static int sleeptime = 40;
+	public static int RAYS_COUNT = 13;
+	public static double RAYS_SPREAD_ANGLE_timser = 1.75;
+	public static double RAYS_SPREAD_ANGLE;
+	public static int CarsNumber = 10;
+	public static volatile int userKeyEvent = 0;
+	public static int[] layersNNetwork;
 	public long startTime;
-	final int CAR_DECISIONS_COUNT = 4;
-	final String SAVE_FILE_EXT = ".brain";
-	public Double FLOP = 0.7;
-	public String NNLayersInput = "7,7";
-	public double mutationStep = 0.43;
-	boolean chainedmutations = false;
-	public int CAR_CANVAS_HEIGHT;
-	public int CAR_CANVAS_WIDTH;
-	public int NN_CANVAS_HEIGHT;
-	public int NN_CANVAS_WIDTH;
-	public int carWidth;
-	public int carHeight;
-	public Boolean isGameOver = false;
-	public Color carStartColor = new Color(200, 100, 30);
-	public CopyOnWriteArrayList<Car> cars;
-	public CopyOnWriteArrayList<Car> traffic;
-	public Car bestCar;
-	public Car userCar;
-	public Image carImage;
-	public Image damagedCarImage;
-	public Image bestCarImage;
-	public int YbestCar;
-	private Image userCarImage;
-	public SaveGame savedGame;
-	public CarCanvas carCanvas;
-	public boolean mutations = false;
-	public boolean reloadRoadIfRestart = false;
-	public boolean useSavedBrain = false;
-	public int trafficCascades;
-	public NetworkCanvas networkCanvas;
-	public Road road;
-	public boolean gamereloading;
-	private long currentTime;
-	private long savedTime;
-	private long currentFrameTime;
-	private long savedFrameTime;
-	private long frameTime;
+	final static int CAR_DECISIONS_COUNT = 4;
+	final static String SAVE_FILE_EXT = ".brain";
+	public static Double FLOP = 0.7;
+	public static String NNLayersInput = "7,7";
+	public static double mutationStep = 0.43;
+	public static boolean chainedmutations = false;
+	public static int CAR_CANVAS_HEIGHT;
+	public static int CAR_CANVAS_WIDTH;
+	public static int NN_CANVAS_HEIGHT;
+	public static int NN_CANVAS_WIDTH;
+	public static int carWidth;
+	public static int carHeight;
+	public static Boolean isGameOver = false;
+	public static Color carStartColor = new Color(200, 100, 30);
+	public static CopyOnWriteArrayList<Car> cars;
+	public static CopyOnWriteArrayList<Car> traffic;
+	public static volatile Car bestCar;
+	public static volatile Car userCar;
+	private static Image carImage;
+	private static Image damagedCarImage;
+	private static Image bestCarImage;
+	private static Image userCarImage;
+	private static volatile int YbestCar;
+	public static SaveGame savedGame;
+	public static CarCanvas carCanvas;
+	public static boolean mutations = false;
+	public static boolean reloadRoadIfRestart = false;
+	public static boolean useSavedBrain = false;
+	public static int trafficCascades;
+	public static NetworkCanvas networkCanvas;
+	public static Road road;
+	public static boolean gamereloading;
+	private static long currentTime;
+	private static long savedTime;
+	private static long currentFrameTime;
+	private static long savedFrameTime;
+	private static long frameTime;
 
 	public static void main(String[] args) {
 		new gameSelfDrivingCar().go();
@@ -108,6 +109,25 @@ public class gameSelfDrivingCar extends JFrame {
 		yesOption.setBounds(comboBox.getWidth() + 10, 0, 48, 15);
 		noOption.setBounds(comboBox.getWidth() + 10, yesOption.getHeight() + 2, 48, 15);
 		gamereloading = false;
+		int[] layersNNetworkToSet;
+		if (!NNLayersInput.equals("")) {
+			int[] tempArray = Arrays.stream(NNLayersInput.split(",")).mapToInt(d -> Integer.parseInt(d)).toArray();
+			layersNNetworkToSet = new int[tempArray.length + 2];
+			layersNNetworkToSet[0] = RAYS_COUNT + 1;
+			layersNNetworkToSet[layersNNetworkToSet.length - 1] = CAR_DECISIONS_COUNT;
+			for (int i = 0; i < tempArray.length; i++) {
+				layersNNetworkToSet[i + 1] = tempArray[i];
+			}
+		} else {
+			layersNNetworkToSet = new int[] { RAYS_COUNT + 1, CAR_DECISIONS_COUNT };
+		}
+		if (!Arrays.equals(layersNNetwork, layersNNetworkToSet)) {
+			layersNNetwork = layersNNetworkToSet;
+			savedBrain = null;
+			useSavedBrain = false;
+			mutations = false;
+			chainedmutations = false;
+		}
 		startTime = System.currentTimeMillis();
 		CAR_CANVAS_HEIGHT = WINDOW_HEIGHT - 34;
 		CAR_CANVAS_WIDTH = (int) Math.floor(WINDOW_WIDTH * 0.5);
@@ -131,7 +151,7 @@ public class gameSelfDrivingCar extends JFrame {
 		optionsRadioButtonsSetup(this);
 		comboboxSetup(this);
 		inputFieldSetup(this);
-		viewImageGamePannelSetup(this);
+		viewImageGamePannelSetup();
 		road = new Road(CAR_CANVAS_WIDTH, carWidth);
 		trafficCascades = random.nextInt(35) + 5;
 		carCanvas = new CarCanvas();
@@ -160,17 +180,8 @@ public class gameSelfDrivingCar extends JFrame {
 		savedFrameTime = savedTime;
 
 		if (savedGame != null) {
-			Car testCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
-					Math.PI * RAYS_SPREAD_ANGLE_timser, CAR_DECISIONS_COUNT, NNLayersInput, "AI", botMaxSpeed,
-					CAR_CANVAS_WIDTH, FLOP, damagedCarImage, bestCarImage, carImage);
-			if (Arrays.equals(testCar.brain.neuronCounts, savedBrain.neuronCounts)) {
-				useSavedBrain = savedGame.useSavedBrain;
-			} else {
-				useSavedBrain = false;
-				savedBrain = null;
-			}
-			;
-			testCar = null;
+			useSavedBrain = savedGame.useSavedBrain;
+			savedBrain = savedGame.savedBrain;
 		} else {
 			useSavedBrain = false;
 			savedBrain = null;
@@ -182,7 +193,8 @@ public class gameSelfDrivingCar extends JFrame {
 		container.requestFocus();
 
 		// int numberOfCores = Runtime.getRuntime().availableProcessors();
-		// ExecutorService executorService = Executors.newFixedThreadPool(numberOfCores);
+		// ExecutorService executorService =
+		// Executors.newFixedThreadPool(numberOfCores);
 		ExecutorService executorService = Executors.newCachedThreadPool();
 
 		while (!isGameOver) {
@@ -229,7 +241,7 @@ public class gameSelfDrivingCar extends JFrame {
 			networkCanvas.updateCanvas(bestCar.brain);
 			filterDamaged();
 			if (gamereloading) {
-				restartGame(this);
+				restartGame();
 				gamereloading = !gamereloading;
 			}
 			currentFrameTime = System.currentTimeMillis();
@@ -249,7 +261,7 @@ public class gameSelfDrivingCar extends JFrame {
 		YbestCar = road.bottom;
 		cars.forEach(car -> {
 			car.bestCar = false;
-			if (car.y < YbestCar && !car.humanDrives && car.x > 0 && car.x < car.canvasWidth) {
+			if (car.y < YbestCar && !car.humanDrives && car.x > 0 && car.x < CAR_CANVAS_WIDTH) {
 				bestCar = car;
 				YbestCar = car.y;
 			}
@@ -264,23 +276,23 @@ public class gameSelfDrivingCar extends JFrame {
 	}
 
 	private void optionsRadioButtonsSetup(gameSelfDrivingCar gameClass) {
-		gameClass.yesOption.addActionListener(new ActionListener() {
+		yesOption.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (e.getSource() == gameClass.yesOption) {
+				if (e.getSource() == yesOption) {
 					try {
 						Field comboboxActivatedField = gameClass.getClass()
-								.getDeclaredField(gameClass.comboBox.getItemAt(gameClass.comboBox.getSelectedIndex()));
-						if (!gameClass.yesOption.isSelected()) {
-							gameClass.yesOption.setSelected(true);
+								.getDeclaredField(comboBox.getItemAt(comboBox.getSelectedIndex()));
+						if (!yesOption.isSelected()) {
+							yesOption.setSelected(true);
 						}
-						gameClass.noOption.setSelected(false);
+						noOption.setSelected(false);
 						if (comboboxActivatedField.get(gameClass) instanceof Boolean) {
 							comboboxActivatedField.set(gameClass, true);
 						}
-						gameClass.yesOption.setFocusable(false);
-						gameClass.noOption.setFocusable(false);
-						gameClass.container.requestFocus();
+						yesOption.setFocusable(false);
+						noOption.setFocusable(false);
+						container.requestFocus();
 					} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
 							| IllegalAccessException ex) {
 						// ex.printStackTrace();
@@ -288,24 +300,24 @@ public class gameSelfDrivingCar extends JFrame {
 				}
 			};
 		});
-		gameClass.noOption.addActionListener(new ActionListener() {
+		noOption.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (e.getSource() == gameClass.noOption) {
+				if (e.getSource() == noOption) {
 					try {
 						Field comboboxActivatedField = gameClass.getClass()
-								.getDeclaredField(gameClass.comboBox.getItemAt(gameClass.comboBox.getSelectedIndex()));
-						if (!gameClass.noOption.isSelected()) {
-							gameClass.noOption.setSelected(true);
+								.getDeclaredField(comboBox.getItemAt(comboBox.getSelectedIndex()));
+						if (!noOption.isSelected()) {
+							noOption.setSelected(true);
 						}
-						gameClass.yesOption.setSelected(false);
+						yesOption.setSelected(false);
 
-						if (comboboxActivatedField.get(gameClass) instanceof Boolean) {
-							comboboxActivatedField.set(gameClass, false);
+						if (comboboxActivatedField.get(this) instanceof Boolean) {
+							comboboxActivatedField.set(this, false);
 						}
-						gameClass.yesOption.setFocusable(false);
-						gameClass.noOption.setFocusable(false);
-						gameClass.container.requestFocus();
+						yesOption.setFocusable(false);
+						noOption.setFocusable(false);
+						container.requestFocus();
 
 					} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
 							| IllegalAccessException ex) {
@@ -317,8 +329,8 @@ public class gameSelfDrivingCar extends JFrame {
 
 	}
 
-	private void viewImageGamePannelSetup(gameSelfDrivingCar gameClass) {
-		gameClass.container.addKeyListener(new KeyAdapter() {
+	private void viewImageGamePannelSetup() {
+		container.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				int keyevent = e.getKeyCode();
 				checkKeyActions(keyevent);
@@ -328,30 +340,30 @@ public class gameSelfDrivingCar extends JFrame {
 	}
 
 	private void inputFieldSetup(gameSelfDrivingCar gameClass) {
-		gameClass.inputField.setFocusable(false);
+		inputField.setFocusable(false);
 
-		gameClass.inputField.addActionListener(new ActionListener() {
+		inputField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					if (e.getSource() == gameClass.inputField) {
+					if (e.getSource() == inputField) {
 						String selectedField = comboBox.getItemAt(comboBox.getSelectedIndex());
 						Field gameField = gameClass.getClass().getDeclaredField(selectedField);
 						gameField.setAccessible(true);
 						Object valueToSet = null;
 						if (gameField.get(gameClass) instanceof Double) {
-							valueToSet = Double.parseDouble(gameClass.inputField.getText());
+							valueToSet = Double.parseDouble(inputField.getText());
 						} else if (gameField.get(gameClass) instanceof Integer) {
-							valueToSet = Integer.parseInt(gameClass.inputField.getText());
+							valueToSet = Integer.parseInt(inputField.getText());
 						} else if (gameField.get(gameClass) instanceof Boolean) {
-							valueToSet = Boolean.parseBoolean(gameClass.inputField.getText());
+							valueToSet = Boolean.parseBoolean(inputField.getText());
 						} else {
-							valueToSet = gameClass.inputField.getText();
+							valueToSet = inputField.getText();
 						}
 						gameField.set(gameClass, valueToSet);
 					}
-					gameClass.inputField.setFocusable(false);
-					gameClass.container.requestFocus();
+					inputField.setFocusable(false);
+					container.requestFocus();
 
 				} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
 						| IllegalAccessException e1) {
@@ -375,35 +387,35 @@ public class gameSelfDrivingCar extends JFrame {
 	}
 
 	private void comboboxSetup(gameSelfDrivingCar gameClass) {
-		gameClass.comboBox.setFocusable(false);
-		gameClass.comboBox.addActionListener(new ActionListener() {
+		comboBox.setFocusable(false);
+		comboBox.addActionListener(new ActionListener() {
 			String comboboxSelection;
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (e.getSource() == gameClass.comboBox) {
-					comboboxSelection = gameClass.comboBox.getItemAt(gameClass.comboBox.getSelectedIndex());
+				if (e.getSource() == comboBox) {
+					comboboxSelection = comboBox.getItemAt(comboBox.getSelectedIndex());
 					try {
 						Field gameField = gameClass.getClass().getDeclaredField(comboboxSelection);
 						if (gameField.get(gameClass) instanceof Boolean) {
-							gameClass.paramsGamePannel.remove(inputField);
-							gameClass.paramsGamePannel.add(yesOption);
-							gameClass.paramsGamePannel.add(noOption);
-							gameClass.yesOption.setFocusable(true);
-							gameClass.noOption.setFocusable(true);
-							gameClass.yesOption.setSelected((boolean) gameField.get(gameClass));
-							gameClass.noOption.setSelected(!((boolean) gameField.get(gameClass)));
+							paramsGamePannel.remove(inputField);
+							paramsGamePannel.add(yesOption);
+							paramsGamePannel.add(noOption);
+							yesOption.setFocusable(true);
+							noOption.setFocusable(true);
+							yesOption.setSelected((boolean) gameField.get(this));
+							noOption.setSelected(!((boolean) gameField.get(this)));
 
 						} else {
-							gameClass.paramsGamePannel.remove(yesOption);
-							gameClass.paramsGamePannel.remove(noOption);
-							gameClass.paramsGamePannel.add(comboBox);
-							gameClass.paramsGamePannel.add(gameClass.inputField);
-							gameClass.inputField.setFocusable(true);
-							gameClass.inputField.setText(gameField.get(gameClass).toString());
+							paramsGamePannel.remove(yesOption);
+							paramsGamePannel.remove(noOption);
+							paramsGamePannel.add(comboBox);
+							paramsGamePannel.add(inputField);
+							inputField.setFocusable(true);
+							inputField.setText(gameField.get(this).toString());
 						}
-						gameClass.paramsGamePannel.revalidate();
-						gameClass.paramsGamePannel.repaint();
+						paramsGamePannel.revalidate();
+						paramsGamePannel.repaint();
 					} catch (NoSuchFieldException | SecurityException | IllegalArgumentException
 							| IllegalAccessException e1) {
 						// System.out.println("Проблема з передачею у рамку внесення результату");
@@ -485,7 +497,7 @@ public class gameSelfDrivingCar extends JFrame {
 
 			carListToBeCreated.add(
 					new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
-							RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, NNLayersInput, "AI", botMaxSpeed, CAR_CANVAS_WIDTH,
+							RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, layersNNetwork, "AI", botMaxSpeed, CAR_CANVAS_WIDTH,
 							FLOP, damagedCarImage, bestCarImage, carImage));
 
 			if (savedBrain != null && useSavedBrain) {
@@ -513,7 +525,7 @@ public class gameSelfDrivingCar extends JFrame {
 		}
 		if (userWantsToPlay) {
 			userCar = new Car((int) Math.floor((double) CAR_CANVAS_WIDTH / 2), 100, carWidth, carHeight, RAYS_COUNT,
-					RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, NNLayersInput, "KEYS", humanBotMaxSpeed, CAR_CANVAS_WIDTH,
+					RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT, layersNNetwork, "KEYS", humanBotMaxSpeed, CAR_CANVAS_WIDTH,
 					FLOP, damagedCarImage, bestCarImage, userCarImage);
 			carListToBeCreated.add(userCar);
 		}
@@ -541,7 +553,8 @@ public class gameSelfDrivingCar extends JFrame {
 				;
 				traffic1.add(
 						(new Car(carX, carY, carWidth, carHeight, RAYS_COUNT, RAYS_SPREAD_ANGLE, CAR_DECISIONS_COUNT,
-								NNLayersInput, "DUMMY", dummyMaxSpeed / 4 + random.nextDouble() * dummyMaxSpeed * 3 / 4,
+								layersNNetwork, "DUMMY",
+								dummyMaxSpeed / 4 + random.nextDouble() * dummyMaxSpeed * 3 / 4,
 								CAR_CANVAS_WIDTH, FLOP, damagedCarImage, bestCarImage, carImage)));
 			}
 		}
@@ -549,11 +562,11 @@ public class gameSelfDrivingCar extends JFrame {
 	}
 
 	public void getSavedGame() {
-		SaveGame savedGame = Utils.getSavedGameFromFile(this);
-		if (savedGame != null) {
-			this.savedGame = savedGame;
+		SaveGame savedGameToSet = Utils.getSavedGameFromFile(this);
+		if (savedGameToSet != null) {
+			savedGame = savedGameToSet;
 
-			Field[] fields = this.savedGame.getClass().getDeclaredFields();
+			Field[] fields = savedGame.getClass().getDeclaredFields();
 			for (Field field : fields) {
 				Field gamefield = null;
 				try {
@@ -561,11 +574,11 @@ public class gameSelfDrivingCar extends JFrame {
 					field.setAccessible(true);
 					gamefield.setAccessible(true);
 					if (field.getName().equalsIgnoreCase("savedBrain")
-							&& field.get(this.savedGame) instanceof NNetwork) {
-						NNetwork clonedSavedBrain = (NNetwork) ((NNetwork) field.get(this.savedGame)).clone();
+							&& field.get(savedGame) instanceof NNetwork) {
+						NNetwork clonedSavedBrain = (NNetwork) ((NNetwork) field.get(savedGame)).clone();
 						gamefield.set(this, clonedSavedBrain);
 					} else {
-						gamefield.set(this, field.get(this.savedGame));
+						gamefield.set(this, field.get(savedGame));
 					}
 				} catch (IllegalArgumentException | IllegalAccessException | CloneNotSupportedException
 						| NoSuchFieldException e) {
@@ -575,7 +588,7 @@ public class gameSelfDrivingCar extends JFrame {
 
 		} else {
 			// System.out.println("--Saved game not found");
-			this.savedGame = savedGame;
+			savedGame = savedGameToSet;
 		}
 	}
 
@@ -647,7 +660,7 @@ public class gameSelfDrivingCar extends JFrame {
 			g2d.drawString("Best brain: " + useSavedBrain, 15, startTextY += textLineHeight);
 			g2d.drawString("Мутації: " + mutations, 15, startTextY += textLineHeight);
 			g2d.drawString("Ланцюг-мутації: " + chainedmutations, 15, startTextY += textLineHeight);
-			g2d.drawString("Н-мережа: " + RAYS_COUNT + "," + NNLayersInput + "," + CAR_DECISIONS_COUNT, 15,
+			g2d.drawString("Н-мережа: " + RAYS_COUNT + "," + NNLayersInput +( NNLayersInput.equalsIgnoreCase("")?"":",") + CAR_DECISIONS_COUNT, 15,
 					startTextY += textLineHeight);
 			g2d.dispose();
 			repaint();
@@ -786,20 +799,40 @@ public class gameSelfDrivingCar extends JFrame {
 		}
 	}
 
-	public void restartGame(gameSelfDrivingCar gameClass) {
+	public void restartGame() {
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		gameClass.bestCar = null;
-		gameClass.cars.clear();
-		gameClass.traffic.clear();
-		if (gameClass.reloadRoadIfRestart) {
-			gameClass.road = null;
-			gameClass.road = new Road(gameClass.CAR_CANVAS_WIDTH, gameClass.carWidth);
+		bestCar = null;
+		int[] layersNNetworkToSet;
+		if (!NNLayersInput.equals("")) {
+			int[] tempArray = Arrays.stream(NNLayersInput.split(",")).mapToInt(d -> Integer.parseInt(d)).toArray();
+			layersNNetworkToSet = new int[tempArray.length + 2];
+			layersNNetworkToSet[0] = RAYS_COUNT + 1;
+			layersNNetworkToSet[layersNNetworkToSet.length - 1] = CAR_DECISIONS_COUNT;
+			for (int i = 0; i < tempArray.length; i++) {
+				layersNNetworkToSet[i + 1] = tempArray[i];
+			}
+		} else {
+			layersNNetworkToSet = new int[] { RAYS_COUNT + 1, CAR_DECISIONS_COUNT };
 		}
-		gameClass.traffic = gameClass.generateTraffic(gameClass.trafficCascades);
-		gameClass.cars = gameClass.generateCars(gameClass.CarsNumber, gameClass.mutations);
+		if (!Arrays.equals(layersNNetwork, layersNNetworkToSet)) {
+			layersNNetwork = layersNNetworkToSet;
+			savedBrain = null;
+			useSavedBrain = false;
+			mutations = false;
+			chainedmutations = false;
+		}
+
+		cars.clear();
+		traffic.clear();
+		if (reloadRoadIfRestart) {
+			road = null;
+			road = new Road(CAR_CANVAS_WIDTH, carWidth);
+		}
+		traffic = generateTraffic(trafficCascades);
+		cars = generateCars(CarsNumber, mutations);
 	}
 }

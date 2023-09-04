@@ -10,96 +10,81 @@ public class Car {
 	public int y;
 	private int y1;
 	public boolean bestCar;
-	public Color normalColor;
-	public Color damagedColor;
-	public Color currentColor;
-	private int freezedFramesMaxCount = 135;
+	private static int freezedFramesMaxCount = 135;
 	private int freezedFrames;
-	protected int width;
-	protected int height;
+	protected static int width;
+	protected static int height;
 	public int roadListYIndexAreaMax;
 	public int roadListYIndexAreaMin;
-	private int toBestCarMaxDistance;
-	private double friction = 0.05;
+	private static int toBestCarMaxDistance;
+	private static double friction = 0.05;
 	private double speed;
-	private double acceleration = 0.2;
+	private static double acceleration = 0.2;
 	private double maxSpeed;
-	public int[] layersNNetwork;
+	public static int[] layersNNetwork;
 	public double angle;
 	private double angleSpeed;
-	private double angleMaxSpeed = 0.09;
-	private double angleAcceleration = angleMaxSpeed / 2;
-	private double[] offsets;
+	private static double angleMaxSpeed = 0.09;
+	private static double angleAcceleration = angleMaxSpeed / 2;
 	public boolean damaged;
 	public boolean useBrain;
 	public boolean humanDrives;
-	private int raysCount;
-	private double raysSpreadAngle;
+	private static int raysCount;
+	private static double raysSpreadAngle;
 	public int[] xDotsPolygonCoords;
 	public int[] yDotsPolygonCoords;
 	public Sensor sensor;
 	public Image carImage;
-	public Image damagedCarImage;
-	public Image bestCarImage;
+	public static Image damagedCarImage;
+	public static Image bestCarImage;
 	public NNetwork brain;
 	private Controls controls;
-	public int canvasWidth;
+	public static int canvasWidth;
 
-	public Car(int x, int y, int carWidth, int carHeight, int raysCount, double raysSpreadAngle,
-			int carDecisionCount, String NNLayersInput, String controlType, double maxSpeed,
-			int canvaswidth, double flop, Image damagedCarImage, Image bestCarImage, Image carImage) {
+	public Car(int x, int y, int carWidth, int carHeight, int raysCountToSet, double raysSpreadAngleToSet,
+			int carDecisionCount, int[] layersNNetworkToSet, String controlType, double maxSpeedToSet,
+			int canvasWidthToSet, double flop, Image damagedCarImageToSet, Image bestCarImageToSet, Image carImage) {
 		this.x = x;
 		this.roadListYIndexAreaMax = 0;
 		this.roadListYIndexAreaMin = 0;
 		this.x1 = this.x;
-		this.canvasWidth = canvaswidth;
 		this.y = y;
 		this.bestCar = false;
-		this.currentColor = this.normalColor;
-		this.damagedColor = Color.red;
-		this.raysCount = raysCount;
-		this.raysSpreadAngle = raysSpreadAngle;
 		this.y1 = this.y;
 		this.angle = -Math.PI / 2;
 		this.freezedFrames = 0;
 		this.angleSpeed = 0;
-		this.width = carWidth;
-		this.height = carHeight;
+		if (width != carWidth) {
+			width = carWidth;
+			height = carHeight;
+			toBestCarMaxDistance = height * 10;
+			raysCount = raysCountToSet;
+			raysSpreadAngle = raysSpreadAngleToSet;
+			canvasWidth = canvasWidthToSet;
+			damagedCarImage = damagedCarImageToSet;
+			bestCarImage = bestCarImageToSet;
+		}
+		if (!Arrays.equals(layersNNetworkToSet, layersNNetwork)) {
+			layersNNetwork = layersNNetworkToSet;
+		}
+		this.maxSpeed = maxSpeedToSet;
 		this.xDotsPolygonCoords = new int[4];
 		this.yDotsPolygonCoords = new int[4];
 		this.createPolygon();
 		this.speed = 0;
-		this.maxSpeed = maxSpeed;
-		this.toBestCarMaxDistance = this.height * 10;
 		this.damaged = false;
 		this.useBrain = controlType.equalsIgnoreCase("AI");
 		this.humanDrives = controlType.equalsIgnoreCase("KEYS");
-
-		ArrayList<Integer> NNLayers = new ArrayList<Integer>();
-		if (!NNLayersInput.equals("")) {
-			NNLayers.add(raysCount + 1);
-			String[] sttringToArray = NNLayersInput.split(",");
-			for (String number : sttringToArray) {
-				NNLayers.add(Integer.parseInt(number));
-			}
-			;
-			NNLayers.add(carDecisionCount);
-		} else {
-			NNLayers.add(raysCount + 1);
-			NNLayers.add(carDecisionCount);
-		}
-		this.layersNNetwork = NNLayers.stream().mapToInt(d -> d).toArray();
 		if (!controlType.equalsIgnoreCase("DUMMY")) {
-			this.sensor = new Sensor(this.x, this.y, this.raysCount, this.angle, this.raysSpreadAngle, this.height);
-			this.brain = new NNetwork(this.layersNNetwork, flop);
+			this.sensor = new Sensor(this.x, this.y, raysCount, this.angle, raysSpreadAngle, height);
+			this.brain = new NNetwork(layersNNetwork, flop);
 			this.carImage = carImage;
 		} else {
 			this.carImage = imageProcessor.getImage(null).getScaledInstance((int) carWidth,
 					(int) carHeight, Image.SCALE_DEFAULT);
 		}
 		this.controls = new Controls(controlType);
-		this.damagedCarImage = damagedCarImage;
-		this.bestCarImage = bestCarImage;
+
 	}
 
 	protected void createPolygon() {
@@ -117,7 +102,6 @@ public class Car {
 	}
 
 	public void carMove(int keyevent, Road road, CopyOnWriteArrayList<Car> traffic, Car bestCar) {
-		currentColor = (!damaged) ? normalColor : damagedColor;
 		move(keyevent);
 		if (useBrain || humanDrives) {
 			getroadArea(road.roadMiddleLaneCoordsList);
@@ -125,25 +109,23 @@ public class Car {
 					|| isTotallyFreezed(isFreezed()) || isOutsider(bestCar);
 		}
 		if (sensor != null) {
-			sensor.castCarRays(x, y, angle);
-			sensor.getReading(this, road, traffic);
-			offsets = new double[layersNNetwork[0]];
-			for (int i = 0; i < offsets.length - 1; ++i) {
+			Sensor.castCarRays(x, y, angle, raysCount, raysSpreadAngle, this.sensor.rayLength, this.sensor.rays);
+			Sensor.getReading(this, road, traffic);
+			for (int i = 0; i < brain.NNlevels[0].levelInputs.length - 1; ++i) {
 				if (sensor.rays.get(i).intersectionPoint == null) {
-					offsets[i] = 0;
+					brain.NNlevels[0].levelInputs[i] = 0;
 				} else {
-					offsets[i] = 1 - sensor.rays.get(i).intersectionPoint.getOffset();
+					brain.NNlevels[0].levelInputs[i] = 1 - sensor.rays.get(i).intersectionPoint.getOffset();
 				}
 			}
-			offsets[offsets.length - 1] = speed / maxSpeed;
-			int[] outputs = new int[brain.NNlevels[brain.NNlevels.length - 1].levelOutputs.length];
-			outputs = brain.feedForward(offsets, brain);
+			brain.NNlevels[0].levelInputs[brain.NNlevels[0].levelInputs.length - 1] = speed / maxSpeed;
+			brain.feedForward();
 			if (useBrain) {
 				if (useBrain) {
-					controls.forward = (outputs[0] == 0) ? false : true;
-					controls.left = (outputs[1] == 0) ? false : true;
-					controls.right = (outputs[2] == 0) ? false : true;
-					controls.reverse = (outputs[3] == 0) ? false : true;
+					controls.forward = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[0] == 0.0) ? false : true;
+					controls.left = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[1] == 0.0) ? false : true;
+					controls.right = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[2] == 0.0) ? false : true;
+					controls.reverse = (brain.NNlevels[brain.NNlevels.length - 1].levelOutputs[3] == 0.0) ? false : true;
 				}
 			}
 		}

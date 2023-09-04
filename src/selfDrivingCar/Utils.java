@@ -55,7 +55,7 @@ public class Utils {
 		SaveGame savedGameObject = new SaveGame(gameclass);
 		String output = gson.toJson(savedGameObject);
 
-		try (FileWriter file = new FileWriter(gameclass.saveFilePath)) {
+		try (FileWriter file = new FileWriter(gameSelfDrivingCar.saveFilePath)) {
 			file.write(output);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -105,8 +105,8 @@ public class Utils {
 					}
 				}
 			} else {
-				if (car.y + car.sensor.rayLength + car.height / 2 > (traffBot.y - traffBot.height / 2)
-						&& car.y - car.sensor.rayLength - car.height / 2 < (traffBot.y + traffBot.height / 2)) {
+				if (car.y + car.sensor.rayLength + Car.height / 2 > (traffBot.y - Car.height / 2)
+						&& car.y - car.sensor.rayLength - Car.height / 2 < (traffBot.y + Car.height / 2)) {
 
 					for (int j = 0; j < traffBot.xDotsPolygonCoords.length; ++j) {
 
@@ -176,7 +176,7 @@ public class Utils {
 	public static SaveGame getSavedGameFromFile(gameSelfDrivingCar gameclass) {
 		BufferedReader br = null;
 		try {
-			File gameOnDisk = new File(gameclass.saveFilePath);
+			File gameOnDisk = new File(gameSelfDrivingCar.saveFilePath);
 			br = new BufferedReader(new FileReader(gameOnDisk));
 			Gson gson = new Gson();
 			SaveGame savedGame = gson.fromJson(br, SaveGame.class);
