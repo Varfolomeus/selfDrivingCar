@@ -13,19 +13,19 @@ public class Car {
 	private static int freezedFramesMaxCount = 135;
 	private int freezedFrames;
 	protected static int width;
-	protected static int height;
+	public static int height;
 	public int roadListYIndexAreaMax;
 	public int roadListYIndexAreaMin;
 	private static int toBestCarMaxDistance;
 	private static double friction = 0.05;
 	private double speed;
 	private static double acceleration = 0.2;
-	private double maxSpeed;
+	public double maxSpeed;
 	public static int[] layersNNetwork;
 	public double angle;
 	private double angleSpeed;
-	private static double angleMaxSpeed = 0.1;
-	private static double angleAcceleration = angleMaxSpeed / 5;
+	public static double angleMaxSpeed = 0.034;
+	public static double angleAcceleration = angleMaxSpeed / 4;
 	public boolean damaged;
 	public boolean useBrain;
 	public boolean humanDrives;
@@ -67,9 +67,9 @@ public class Car {
 		if (!Arrays.equals(layersNNetworkToSet, layersNNetwork)) {
 			layersNNetwork = layersNNetworkToSet;
 		}
-		this.maxSpeed = maxSpeedToSet;
 		this.xDotsPolygonCoords = new int[4];
 		this.yDotsPolygonCoords = new int[4];
+		this.maxSpeed = maxSpeedToSet;
 		this.createPolygon();
 		this.speed = 0;
 		this.damaged = false;
@@ -238,22 +238,13 @@ public class Car {
 	}
 
 	private void move(int xToGet, int yToGet) {
-		controls.addKeyboardListeners(x, y, angle, xToGet, yToGet);
+		controls.addKeyboardListeners(x, y, angle, speed, maxSpeed, xToGet, yToGet);
 		if (controls.forward) {
 			speed += acceleration;
 		} else if (controls.reverse) {
 			speed -= acceleration;
 		}
 
-		if (speed != 0) {
-			int flip = (speed > 0) ? -1 : 1;
-			angle -= angleSpeed * flip;
-			if (controls.left) {
-				angleSpeed -= angleAcceleration;
-			} else if (controls.right) {
-				angleSpeed += angleAcceleration;
-			}
-		}
 		if (speed > maxSpeed) {
 			speed = maxSpeed;
 		}
@@ -275,13 +266,17 @@ public class Car {
 			angleSpeed = -angleMaxSpeed;
 		}
 
-		if (angleSpeed > 0) {
-			angleSpeed -= angleAcceleration / 5;
-		} else if (angleSpeed < 0) {
-			angleSpeed += angleAcceleration / 5;
+		if (speed != 0) {
+			int flip = (speed > 0) ? -1 : 1;
+			if (controls.left) {
+				angleSpeed -= angleAcceleration;
+			} else if (controls.right) {
+				angleSpeed += angleAcceleration;
+			}
+			angle -= angleSpeed * flip;
 		}
 
-		if (Math.abs(angleSpeed) < angleAcceleration && controls.left == false && controls.right == false) {
+		if (controls.left == false && controls.right == false) {
 			angleSpeed = 0;
 		}
 

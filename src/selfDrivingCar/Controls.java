@@ -16,11 +16,13 @@ public class Controls {
 		this.reverse = false;
 	};
 
-	public void addKeyboardListeners(int carCenterX, int carCenterY, double carAngle, int eventX, int eventY) {
+	public void addKeyboardListeners(int carCenterX, int carCenterY, double carAngle, double carSpeed,
+			double carMaxSpeed, int eventX,
+			int eventY) {
 		switch (controlType) {
 			case "KEYS":
 				if (eventX != 0 && eventY != 0) {
-					carReflectionOfMouse(carCenterX, carCenterY, carAngle, eventX, eventY);
+					carReflectionOfMouse(carCenterX, carCenterY, carAngle, carSpeed, carMaxSpeed, eventX, eventY);
 				} else {
 					carReflection(eventX);
 				}
@@ -32,7 +34,9 @@ public class Controls {
 
 	}
 
-	private void carReflectionOfMouse(int carCenterX, int carCenterY, double carAngle, int eventX, int eventY) {
+	private void carReflectionOfMouse(int carCenterX, int carCenterY, double carAngle, double carSpeed,
+			double carMaxSpeed, int eventX,
+			int eventY) {
 		// double angletomouse
 		if (eventX == 0 && eventY == 0) {
 			left = false;
@@ -62,26 +66,60 @@ public class Controls {
 		if (deltaAngle < -Math.PI) {
 			deltaAngle += 2 * Math.PI;
 		}
-		// System.out.println("ramgeToMouse " + rangeToMouse + " deltaAngle " + deltaAngle);
+		// System.out.println("ramgeToMouse " + rangeToMouse + " deltaAngle " +
+		// deltaAngle);
+
+		//	System.out.print("ray to car: " + rangeToMouse / (Car.height * 3) + " coord speed: " + carSpeed / carMaxSpeed+" ");
+
 		if (rangeToMouse > 0 && Math.abs(deltaAngle) <= (Math.PI / 2)) {
-			forward = true;
-			reverse = false;
-			if (deltaAngle > 0) {
+			if (rangeToMouse > (Car.height * 3) && Math.abs(carSpeed) / carMaxSpeed <= 1) {
+				forward = true;
+				reverse = false;
+			} else if (rangeToMouse / (Car.height * 3) < Math.abs(carSpeed) / carMaxSpeed
+					&& ((rangeToMouse / (Car.height * 3)) / (Math.abs(carSpeed) / carMaxSpeed)) < 0.5) {
+				forward = false;
+				reverse = true;
+			} else if (rangeToMouse / (Car.height * 3) < Math.abs(carSpeed) / carMaxSpeed
+					&& ((rangeToMouse / (Car.height * 3)) / (Math.abs(carSpeed) / carMaxSpeed)) >= 0.5) {
+				forward = false;
+				reverse = false;
+			} else {
+				forward = true;
+				reverse = false;
+			}
+			if (deltaAngle > Car.angleAcceleration) {
 				right = true;
 				left = false;
-			}
-			if (deltaAngle < 0) {
+			} else if (deltaAngle < -Car.angleAcceleration) {
 				right = false;
 				left = true;
+			} else {
+				right = false;
+				left = false;
 			}
 		} else if (rangeToMouse > 0 && Math.abs(deltaAngle) > (Math.PI / 2)) {
-			forward = false;
-			reverse = true;
-			if (deltaAngle > 0) {
+			if (rangeToMouse > (Car.height * 3) && Math.abs(carSpeed) / carMaxSpeed <= 1) {
+				forward = false;
+				reverse = true;
+			} else if (rangeToMouse / (Car.height * 3) < Math.abs(carSpeed) / carMaxSpeed
+					&& ((rangeToMouse / (Car.height * 3)) / (Math.abs(carSpeed) / carMaxSpeed)) < 0.5) {
+				forward = true;
+				reverse = false;
+			} else if (rangeToMouse / (Car.height * 3) < Math.abs(carSpeed) / carMaxSpeed
+					&& ((rangeToMouse / (Car.height * 3)) / (Math.abs(carSpeed) / carMaxSpeed)) >= 0.5) {
+				forward = false;
+				reverse = false;
+			} else {
+				forward = false;
+				reverse = true;
+			}
+			if (Math.abs(deltaAngle) > Math.PI - Car.angleAcceleration) {
+				right = false;
+				left = false;
+			} else if (deltaAngle < 0) {
 				right = false;
 				left = true;
-			}
-			if (deltaAngle < 0) {
+			} else if (deltaAngle > 0) {
 				right = true;
 				left = false;
 			}
@@ -91,6 +129,7 @@ public class Controls {
 			forward = false;
 			reverse = false;
 		}
+		// System.out.println("ffwd: " + forward + " reverse: " + reverse);
 	}
 
 	public void carReflection(int keyevent) {
