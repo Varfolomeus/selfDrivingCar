@@ -6,7 +6,7 @@ import javax.swing.JOptionPane;
 
 public class SaveGame {
 	public int RAYS_COUNT;
-	public double RAYS_SPREAD_ANGLE_timser;
+	public double RAYS_SPREAD_ANGLE_MULTIPLIER;
 	public String NNLayersInput;
 	public double FLOP;
 	public double mutationStep;
@@ -17,9 +17,9 @@ public class SaveGame {
 	public boolean reloadRoadIfRestart;
 	public double humanBotMaxSpeed;
 	public boolean userWantsToPlay;
-	public boolean chainedmutations;
+	public boolean chainedMutations;
 	public boolean useSavedBrain;
-	public int sleeptime;
+	public int sleepTime;
 	public int WINDOW_HEIGHT;
 	public int WINDOW_WIDTH;
 	public NNetwork savedBrain;

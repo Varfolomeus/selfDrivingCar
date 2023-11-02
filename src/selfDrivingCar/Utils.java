@@ -45,8 +45,8 @@ public class Utils {
 		System.out.println("finish");
 	}
 
-	public static double lerp(double a, double b, double t) {
-		return a + (b - a) * t;
+	public static <T extends Number> double lerp(T a, T b, double t) {
+		return a.doubleValue() + (b.doubleValue() - a.doubleValue()) * t;
 	}
 
 	public static void saveGameToFile(gameSelfDrivingCar gameclass) {

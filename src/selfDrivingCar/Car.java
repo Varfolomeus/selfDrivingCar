@@ -58,12 +58,12 @@ public class Car {
 			width = carWidth;
 			height = carHeight;
 			toBestCarMaxDistance = height * 10;
-			raysCount = raysCountToSet;
-			raysSpreadAngle = raysSpreadAngleToSet;
 			canvasWidth = canvasWidthToSet;
 			damagedCarImage = damagedCarImageToSet;
 			bestCarImage = bestCarImageToSet;
 		}
+		if (raysSpreadAngle != raysSpreadAngleToSet) {raysSpreadAngle = raysSpreadAngleToSet;}
+		if (raysCount != raysCountToSet) {raysCount = raysCountToSet;}
 		if (!Arrays.equals(layersNNetworkToSet, layersNNetwork)) {
 			layersNNetwork = layersNNetworkToSet;
 		}

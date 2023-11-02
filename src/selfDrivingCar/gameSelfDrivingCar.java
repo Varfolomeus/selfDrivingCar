@@ -5,7 +5,10 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Field;
 import javax.swing.*;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -120,8 +123,9 @@ public class gameSelfDrivingCar extends JFrame {
 		} else {
 			layersNNetworkToSet = new int[] { RAYS_COUNT + 1, CAR_DECISIONS_COUNT };
 		}
-		if (!Arrays.equals(layersNNetwork, layersNNetworkToSet)) {
-			layersNNetwork = layersNNetworkToSet;
+		boolean ttttttt = Arrays.equals(layersNNetwork, layersNNetworkToSet);
+		if (!ttttttt) {
+			layersNNetwork = layersNNetworkToSet.clone();
 			savedBrain = null;
 			useSavedBrain = false;
 			mutations = false;
@@ -177,15 +181,6 @@ public class gameSelfDrivingCar extends JFrame {
 		gameFrame.setVisible(true);
 		savedTime = System.currentTimeMillis();
 		savedFrameTime = savedTime;
-
-		if (savedGame != null) {
-			useSavedBrain = savedGame.useSavedBrain;
-			savedBrain = savedGame.savedBrain;
-		} else {
-			useSavedBrain = false;
-			savedBrain = null;
-		}
-		;
 		cars = generateCars(CarsNumber, mutations);
 
 		traffic = generateTraffic(trafficCascades);
@@ -592,6 +587,8 @@ public class gameSelfDrivingCar extends JFrame {
 							&& field.get(savedGame) instanceof NNetwork) {
 						NNetwork clonedSavedBrain = (NNetwork) ((NNetwork) field.get(savedGame)).clone();
 						gameField.set(this, clonedSavedBrain);
+						layersNNetwork = clonedSavedBrain.neuronCounts;
+
 					} else {
 						gameField.set(this, field.get(savedGame));
 					}

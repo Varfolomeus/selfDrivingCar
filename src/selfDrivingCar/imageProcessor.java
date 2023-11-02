@@ -2,7 +2,6 @@ package selfDrivingCar;
 
 import java.awt.*;
 import java.awt.image.*;
-import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 
@@ -13,7 +12,7 @@ public class imageProcessor {
 		try {
 			Random random=new Random();
 			// Завантажуємо зображення з файлу
-			BufferedImage originalImage = ImageIO.read(new File("img/original.png"));
+			BufferedImage originalImage = ImageIO.read(gameSelfDrivingCar.class.getResourceAsStream("/img/original.png"));
 
 			// Створюємо нове зображення того ж розміру, що і оригінальне
 			BufferedImage newImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(),
