@@ -54,10 +54,21 @@ public class Utils {
 		Gson gson = new Gson();
 		SaveGame savedGameObject = new SaveGame(gameclass);
 		String output = gson.toJson(savedGameObject);
-
-		try (FileWriter file = new FileWriter(gameSelfDrivingCar.saveFilePath)) {
-			file.write(output);
+		try {
+			File f1 = new File("img");
+			if (!f1.exists()) {
+				if (f1.mkdirs()) {
+					JOptionPane.showMessageDialog(gameclass, "Directory created");
+				} else {
+					JOptionPane.showMessageDialog(gameclass, "Error directory creation!");
+				}
+			}
+			FileWriter file = new FileWriter(gameSelfDrivingCar.saveFilePath);
+			BufferedWriter bw = new BufferedWriter(file);
+			bw.write(output);
+			bw.close();
 		} catch (IOException e) {
+			JOptionPane.showMessageDialog(gameclass, "Error directory creation11!");
 			e.printStackTrace();
 		}
 		// System.out.print(output);
@@ -119,8 +130,7 @@ public class Utils {
 								traffBot.xDotsPolygonCoords[j],
 								traffBot.yDotsPolygonCoords[j],
 								traffBot.xDotsPolygonCoords[j == traffBot.yDotsPolygonCoords.length - 1 ? 0 : j + 1],
-								traffBot.yDotsPolygonCoords[j == traffBot.yDotsPolygonCoords.length - 1 ? 0 : j + 1]
-								);
+								traffBot.yDotsPolygonCoords[j == traffBot.yDotsPolygonCoords.length - 1 ? 0 : j + 1]);
 
 						if (touch != null) {
 							// System.out.println(touch.getX() + " " + touch.getY() + " " +
