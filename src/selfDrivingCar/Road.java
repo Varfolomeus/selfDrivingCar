@@ -46,7 +46,7 @@ public class Road {
 		this.top = -infinity;
 		this.roadLinesX = new double[this.lanesCount + 1];
 
-		getRoadPaintedLines(canvasWidth);
+		getRoadPaintedLines(this.roadWidth);
 		roadImage = new BufferedImage(canvasWidth, (this.bottom + (int) Math.abs(this.top)),
 				BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = roadImage.createGraphics();
@@ -54,7 +54,6 @@ public class Road {
 		Stroke dashed = new BasicStroke(10, BasicStroke.JOIN_ROUND, BasicStroke.JOIN_BEVEL,
 				0, new float[] { r, r / 2 }, 0);
 		Stroke plainStroke = new BasicStroke(10);
-
 		g2d.setColor(Color.WHITE);
 		for (int i = 0; i < roadMiddleLaneDrawCoordsArray.length; ++i) {
 			if (i > 0 && i < roadMiddleLaneDrawCoordsArray.length - 1) {
@@ -71,8 +70,7 @@ public class Road {
 
 	}
 
-	private void getRoadPaintedLines(int canvasWidth) {
-
+	private void getRoadPaintedLines(int roadWidth) {
 		int firstLineX = x - roadWidth / 2;
 		int lastLineX = x + roadWidth / 2;
 		for (int i = 0; i < (lanesCount + 1); ++i) {
@@ -102,11 +100,35 @@ public class Road {
 		for (int y = 0; y > -curveLength; y--) {
 			ArrayList<Double> roadStep = new ArrayList<Double>();
 			for (int j = 0; j < stepRoadArrayLength; ++j) {
-				if (j % 2 == 0) {
-					Double x = firstTurnRight * Math.sin(y * curveFrequency) * curveAmplitude;
-					roadStep.add(x + roadLinesX[(j / 2) + 1]);
+				double xPrev = firstTurnRight * Math.sin((y + 1) * curveFrequency) * curveAmplitude;
+				double x = firstTurnRight * Math.sin(y * curveFrequency) * curveAmplitude;
+				double angle = Math.atan(xPrev - x) + Math.PI / 2;
+				if (y < -2) {
+					if (j % 2 == 0) {
+						// roadStep.add(x + roadLinesX[(j / 2) + 1]);
+						if (j == 0 && j % 3 == 0) {
+							// left side
+							// roadStep.add(x + roadLinesX[(j / 2) + 1]);
+							double xCenter = x + (roadLinesX[(j / 2) + 1] + roadLinesX[(j / 2) + 2]) / 2;
+							double halfLane = (roadLinesX[(j / 2) + 2] - roadLinesX[(j / 2) + 1]) / 2;
+							roadStep.add(xCenter - halfLane * Math.sin(angle));
+							roadStep.add(Double.valueOf(y) - halfLane * Math.cos(angle));
+							// System.out.println(angle + " " + halfLane);
+						} else if (j > 0 && j % 3 == 2) {
+							// right side
+							// roadStep.add(x + roadLinesX[(j / 2) + 1]);
+							double xCenter = x + (roadLinesX[(j / 2) + 1] + roadLinesX[(j / 2)]) / 2;
+							double halfLane = (roadLinesX[(j / 2) + 1] - roadLinesX[(j / 2)]) / 2;
+							roadStep.add(xCenter + halfLane * Math.sin(angle));
+							roadStep.add(Double.valueOf(y) + halfLane * Math.cos(angle));
+						}
+					}
 				} else {
-					roadStep.add(Double.valueOf(y));
+					if (j % 2 == 0) {
+						roadStep.add(x + roadLinesX[(j / 2) + 1]);
+					} else {
+						roadStep.add(Double.valueOf(y));
+					}
 				}
 			}
 
